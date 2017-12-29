@@ -20,13 +20,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/editText4"
+        android:id="@+id/cardsLeft"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:background="@drawable/round_shape"
         android:ems="1"
         android:layout_margin="10dp"
-        android:text="2"
+        android:text="13"
         android:textSize="30sp"
         android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -37,7 +37,7 @@
         android:layout_height="262dp"
         android:layout_margin="30dp"
         android:background="@drawable/round_shape"
-        app:layout_constraintBottom_toTopOf="@+id/editText4"
+        app:layout_constraintBottom_toTopOf="@+id/cardsLeft"
         app:layout_constraintTop_toBottomOf="@id/editText3"
         app:layout_constraintVertical_bias="0.85"
         app:layout_constraintEnd_toEndOf="parent"
@@ -45,33 +45,39 @@
         tools:layout_editor_absoluteX="64dp">
 
         <ImageView
-            android:id="@+id/imageView3"
+            android:id="@+id/image"
             android:layout_width="65dp"
             android:layout_height="92dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginEnd="35dp"
-            android:layout_marginTop="68dp"
-            android:layout_toStartOf="@+id/imageView2"
-            app:srcCompat="@drawable/shrek" />
+            android:layout_alignBottom="@+id/image2"
+            android:layout_toStartOf="@+id/image3"
+            android:src="@drawable/banana"/>
 
         <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/image1"
             android:layout_width="118dp"
             android:layout_height="75dp"
-            android:layout_below="@+id/imageView3"
+            android:layout_below="@+id/image"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="13dp"
-            app:srcCompat="@drawable/gitara" />
+            android:src="@drawable/budzik"/>
 
         <ImageView
-            android:id="@+id/imageView2"
+            android:id="@+id/image2"
             android:layout_width="57dp"
             android:layout_height="84dp"
-            android:layout_alignBottom="@+id/imageView"
             android:layout_alignParentEnd="true"
-            android:layout_marginBottom="72dp"
-            android:layout_marginEnd="77dp"
-            app:srcCompat="@drawable/kwiat" />
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="30dp"
+            android:src="@drawable/dom"/>
+
+        <ImageView
+            android:id="@+id/image3"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_above="@+id/image2"
+            android:layout_toStartOf="@+id/image2"
+            android:src="@drawable/drzewo"/>
+
 
     </RelativeLayout>
 
@@ -99,7 +105,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginEnd="132dp"
+        android:layout_marginEnd="108dp"
         android:text="Kasia"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/editText3" />

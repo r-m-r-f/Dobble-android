@@ -1,6 +1,7 @@
 package dobbleproject.dobble;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -40,6 +41,9 @@ public class ClientActivity extends AppCompatActivity {
                     thread.endJob();
                     isJobRunning = false;
                 }
+
+                Intent intent = new Intent(ClientActivity.this, GameActivity.class);
+                startActivity(intent);
             }
         });
     }

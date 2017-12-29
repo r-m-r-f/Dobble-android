@@ -39,7 +39,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".GameActivity"></activity>
+        <activity android:name=".GameActivity">
+            <intent-filter>
+                <action android:name="dobble-project.dobble.GameActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
