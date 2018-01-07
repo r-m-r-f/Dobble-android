@@ -1,6 +1,8 @@
 package dobbleproject.dobble;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -9,21 +11,46 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class ServerActivity extends AppCompatActivity {
+import java.net.ServerSocket;
 
+import dobbleproject.dobble.Server.ServerPlayerRegistration;
+import dobbleproject.dobble.Server.ServerAnnouncement;
+import dobbleproject.dobble.Server.ServerSocketSingleton;
+
+public class ServerActivity extends AppCompatActivity {
     Button startButton;
     TextView textView;
     Handler mHandler = new Handler();
-    // Server or client thread
-    GameJobThread thread;
+
     boolean isJobRunning = false;
+
+    WifiManager wifiManager;
+
+    // TODO: Add custom server name
+    String serverName;
+
+    // Number of players
+    int numberOfPlayers;
 
     Context mContext;
 
+    String broadcastAddress;
+    String serverIp;
+
+    // Server threads
+    ServerAnnouncement serverAnnouncement = null;
+    ServerPlayerRegistration serverPlayerRegistration = null;
+
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
+
+        // Set server name and player name
+        Bundle b = getIntent().getExtras();
+        serverName = b.getString("serverName");
+        numberOfPlayers = b.getInt("numberOfPlayers");
 
         startButton = findViewById(R.id.startButton);
         textView = findViewById(R.id.textView4);
@@ -31,17 +58,36 @@ public class ServerActivity extends AppCompatActivity {
         // Set context
         mContext = this.getApplicationContext();
 
+        try {
+            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+            serverIp = WifiHelper.getIpAddress(wifiManager);
+            broadcastAddress = WifiHelper.getBroadcastAddress(wifiManager);
+
+            //Set server socket
+            ServerSocket ss = new ServerSocket(0, numberOfPlayers);
+            ServerSocketSingleton.setServerSocket(ss);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case ServerMessage.ERROR:
-                        String message = (String) msg.getData().get("msg");
+                    case MessageType.DEBUG:
                         textView.append(msg.getData().getString("msg") + "\n");
                         break;
-                    case ServerMessage.TEST:
-                        textView.append(msg.getData().getString("msg") + "\n");
+                    case MessageType.PLAYERS_LIST_READY:
+                        if(serverAnnouncement != null && serverAnnouncement.isAlive()) {
+                            serverAnnouncement.quit();
+                        }
+                        // TODO: Start a new activity
                         break;
+                    // TODO: Handle other message types
                 }
             }
         };
@@ -51,15 +97,46 @@ public class ServerActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(!isJobRunning) {
                     isJobRunning = true;
-                    thread = new ServerThread(mContext, mHandler, "Server");
-                    thread.start();
+                    serverAnnouncement = new ServerAnnouncement(serverName, serverIp, broadcastAddress, mHandler);
+                    serverPlayerRegistration = new ServerPlayerRegistration(serverName, serverIp, numberOfPlayers, mHandler);
+
                     textView.setText("");
-                } else if(thread instanceof ServerThread) {
-                    thread.endJob();
+
+                    serverAnnouncement.start();
+                    serverPlayerRegistration.start();
+                } else {
+                    stopThreads();
                     isJobRunning = false;
                 }
             }
         });
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopThreads();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopThreads();
+    }
+
+    private void stopThreads() {
+        if(serverAnnouncement != null && serverAnnouncement.isAlive()) {
+            serverAnnouncement.quit();
+        }
+
+        if(serverPlayerRegistration != null && serverPlayerRegistration.isAlive()) {
+            serverPlayerRegistration.quit();
+        }
     }
 }

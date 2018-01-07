@@ -22,7 +22,7 @@ public class ChoosingModeActivity extends AppCompatActivity {
         masterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ChoosingModeActivity.this, ServerActivity.class);
+                Intent intent = new Intent(ChoosingModeActivity.this, ServerSetupActivity.class);
                 startActivity(intent);
             }
         });
