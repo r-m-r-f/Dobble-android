@@ -47,59 +47,6 @@ public class PlayerRegisterRequest extends Thread {
         this.uiHandler = uiHandler;
     }
 
-//    @Override
-//    public void run() {
-//        try {
-//            byte[] buffer = new byte[AppConfiguration.MAX_PACKET_LENGTH];
-//            DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
-//
-//            senderSocket = new DatagramSocket();
-//
-//            listenerSocket = new DatagramSocket(AppConfiguration.LISTENER_PORT);
-//            listenerSocket.setSoTimeout(AppConfiguration.SOCKET_TIMEOUT);
-//
-//            RegisterRequestPacket registerRequestPacket = new RegisterRequestPacket(playerName, playerIp, PlayerSocketHandler.getPort());
-//
-//            senderSocket.send(registerRequestPacket.getDatagram(serverIp));
-//
-//            Packet response = null;
-//            // Check if server is responding
-//            try {
-//                listenerSocket.receive(datagram);
-//                response = PacketParser.getPacket(datagram);
-//            } catch (SocketTimeoutException e) {
-//                Message message = new Message();
-//                message.what = MessageType.REGISTER_REQUEST_EXPIRED;
-//
-//                uiHandler.sendMessage(message);
-//            }
-//
-//            if(response instanceof RegisterAcceptedPacket) {
-////                InetAddress address = InetAddress.getByName(((RegisterAcceptedPacket) response).getServerIp());
-////                int serverPort = ((RegisterAcceptedPacket) response).getServerPort();
-////               try {
-////                   PlayerSocketHandler.getSocket().connect(new InetSocketAddress(address, serverPort), AppConfiguration.SOCKET_TIMEOUT);
-////               } catch (SocketTimeoutException e) { }
-//                Message message = new Message();
-//                message.what = MessageType.PLAYER_REGISTERED;
-//
-//                uiHandler.sendMessage(message);
-//            }
-//
-//        } catch (IOException|JSONException e) {
-//            e.printStackTrace();
-//        } finally {
-////            if(senderSocket != null) {
-////                senderSocket.close();
-////            }
-//
-//            if(listenerSocket != null) {
-//                listenerSocket.close();
-//            }
-//        }
-//    }
-
-
     @Override
     public void run() {
         Message message = new Message();
