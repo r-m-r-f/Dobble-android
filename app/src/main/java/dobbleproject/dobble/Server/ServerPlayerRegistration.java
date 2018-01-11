@@ -2,6 +2,7 @@ package dobbleproject.dobble.Server;
 
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -14,8 +15,6 @@ import dobbleproject.dobble.MessageType;
 public class ServerPlayerRegistration extends Thread {
     private DatagramSocket listenerSocket = null;
     private DatagramSocket senderSocket = null;
-
-//    Socket serverSocket = null;
 
     private Handler uiHandler;
 
@@ -43,10 +42,24 @@ public class ServerPlayerRegistration extends Thread {
             e.printStackTrace();
         }
 
-        ServerSocket ss = ServerSocketSingleton.getServerSocket();
+        //Set server socket
+        ServerSocket ss = null;
+        try {
+            ss = ServerSocketSingleton.getServerSocket();
+            if(ss != null) {
+                ss.close();
+            }
+            ss = new ServerSocket(0, numberOfPlayers);
+            ServerSocketSingleton.setServerSocket(ss);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
 
-        while (isRunning && registered < numberOfPlayers) {
+
+        while (!isInterrupted() && registered < numberOfPlayers) {
             try {
+                Log.d("player registration", ss.toString());
                 Socket playerSocket = ss.accept();
 
                 // TODO: Change Player to Socket
@@ -70,6 +83,14 @@ public class ServerPlayerRegistration extends Thread {
         isRunning = false;
         if(listenerSocket != null) {
             listenerSocket.close();
+        }
+
+        if(ServerSocketSingleton.getServerSocket() != null) {
+            try {
+                ServerSocketSingleton.getServerSocket().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         uiHandler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
     }

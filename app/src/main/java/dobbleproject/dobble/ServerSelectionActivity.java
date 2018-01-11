@@ -6,14 +6,26 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import dobbleproject.dobble.Player.PlayerServerDiscovery;
 import dobbleproject.dobble.Player.PlayerSocketHandler;
@@ -34,12 +46,34 @@ public class ServerSelectionActivity extends AppCompatActivity {
     private PlayerServerDiscovery playerServerDiscovery = null;
     private PlayerRegisterRequest registerRequest = null;
 
+    ArrayList<ServerInfo> servers = new ArrayList<>();
+    ListView serverList = null;
+
 
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_selection);
+
+        final ArrayAdapter<ServerInfo> adapter = new ServerItemAdapter(this, R.layout.serverlist_item_layout, servers);
+
+        serverList = findViewById(R.id.serverListView);
+        serverList.setAdapter(adapter);
+        serverList.setClickable(true);
+
+        serverList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ServerInfo item = adapter.getItem(i);
+
+                if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
+                    playerServerDiscovery.quit();
+                }
+                registerRequest = new PlayerRegisterRequest(playerName, playerIp, item.getIp(), item.getPort(), mHandler);
+                registerRequest.start();
+            }
+        });
 
         // Set player name
         Bundle b = getIntent().getExtras();
@@ -69,14 +103,16 @@ public class ServerSelectionActivity extends AppCompatActivity {
                     case MessageType.SERVER_DISCOVERED:
                         ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
                         Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
+                        servers.add(serverInfo);
+                        adapter.notifyDataSetChanged();
 
                         // Stop server discovery to free listener port
                         // TODO: Move to button listener
-                        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
-                            playerServerDiscovery.quit();
-                        }
-                        registerRequest = new PlayerRegisterRequest(playerName, playerIp, serverInfo.getIp(), serverInfo.getPort(), mHandler);
-                        registerRequest.start();
+//                        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
+//                            playerServerDiscovery.quit();
+//                        }
+//                        registerRequest = new PlayerRegisterRequest(playerName, playerIp, serverInfo.getIp(), serverInfo.getPort(), mHandler);
+//                        registerRequest.start();
                         break;
                     case MessageType.REGISTER_REQUEST_EXPIRED:
                         Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);
@@ -140,5 +176,38 @@ public class ServerSelectionActivity extends AppCompatActivity {
         if(registerRequest != null && registerRequest.isAlive()) {
             registerRequest.quit();
         }
+    }
+}
+
+class ServerItemAdapter extends ArrayAdapter<ServerInfo> {
+
+    private List<ServerInfo> objects;
+
+    public ServerItemAdapter(@NonNull Context context, int resource, @NonNull List<ServerInfo> objects) {
+        super(context, resource, objects);
+        this.objects = objects;
+    }
+
+    @NonNull
+    @Override
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        View v = convertView;
+        ServerInfo item = null;
+
+        if (v == null) {
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            v = inflater.inflate(R.layout.serverlist_item_layout, null);
+        }
+
+        if(objects != null) {
+            item = objects.get(position);
+        }
+
+        if(item != null) {
+            TextView tv = v.findViewById(R.id.serverName);
+            tv.setText(item.getName());
+        }
+
+        return v;
     }
 }

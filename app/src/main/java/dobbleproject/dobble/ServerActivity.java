@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 
 import dobbleproject.dobble.Server.ServerPlayerRegistration;
@@ -65,9 +66,17 @@ public class ServerActivity extends AppCompatActivity {
             broadcastAddress = WifiHelper.getBroadcastAddress(wifiManager);
 
             //Set server socket
-            ServerSocket ss = new ServerSocket(0, numberOfPlayers);
-            ServerSocketSingleton.setServerSocket(ss);
-
+            try {
+                ServerSocket ss = ServerSocketSingleton.getServerSocket();
+                if(ss != null) {
+                    ss.close();
+                }
+                ss = new ServerSocket(0, numberOfPlayers);
+                ServerSocketSingleton.setServerSocket(ss);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,6 +94,7 @@ public class ServerActivity extends AppCompatActivity {
                         if(serverAnnouncement != null && serverAnnouncement.isAlive()) {
                             serverAnnouncement.quit();
                         }
+                        isJobRunning = false;
                         // TODO: Start a new activity
                         break;
                     // TODO: Handle other message types

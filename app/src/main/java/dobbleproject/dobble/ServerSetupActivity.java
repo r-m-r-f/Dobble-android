@@ -41,6 +41,7 @@ public class ServerSetupActivity extends AppCompatActivity {
                     intent.putExtra("numberOfPlayers", numberOfPlayers);
 
                     startActivity(intent);
+                    finish();
                 }
 
 
