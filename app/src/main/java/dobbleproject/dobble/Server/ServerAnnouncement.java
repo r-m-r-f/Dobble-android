@@ -50,7 +50,7 @@ public class ServerAnnouncement extends Thread {
 
         uiHandler.sendMessage(MessageHelper.createDebugMessage("Broadcast"));
 
-        while(isRunning) {
+        while(!isInterrupted() && isRunning) {
             try {
                 announcementPacket = new AnnouncementPacket(serverName, serverIp, ServerSocketSingleton.getPort()).getDatagram(broadcastAddress);
                 broadcastSocket.send(announcementPacket);
@@ -60,7 +60,7 @@ public class ServerAnnouncement extends Thread {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 // TODO: Move isRunning to quit()
-//                isRunning = false;
+                isRunning = false;
             }
         }
         uiHandler.sendMessage(MessageHelper.createDebugMessage("server announcement stopped"));

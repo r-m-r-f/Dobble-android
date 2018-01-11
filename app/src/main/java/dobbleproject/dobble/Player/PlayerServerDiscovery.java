@@ -42,7 +42,7 @@ public class PlayerServerDiscovery extends Thread {
             e.printStackTrace();
         }
 
-        while(isRunning) {
+        while(!isInterrupted() && isRunning) {
             try {
                 listenerSocket.receive(datagram);
                 response = PacketParser.getPacket(datagram);
