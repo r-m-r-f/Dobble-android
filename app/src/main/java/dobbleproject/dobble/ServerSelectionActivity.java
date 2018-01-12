@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import dobbleproject.dobble.Player.PlayerServerDiscovery;
@@ -46,7 +46,10 @@ public class ServerSelectionActivity extends AppCompatActivity {
     private PlayerServerDiscovery playerServerDiscovery = null;
     private PlayerRegisterRequest registerRequest = null;
 
-    ArrayList<ServerInfo> servers = new ArrayList<>();
+    // TODO: Refactor list of servers
+    // <ip, name>
+    HashMap<String, String> knownServers = new HashMap<>();
+    ArrayList<ServerInfo> serversList = new ArrayList<>();
     ListView serverList = null;
 
 
@@ -56,7 +59,7 @@ public class ServerSelectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_selection);
 
-        final ArrayAdapter<ServerInfo> adapter = new ServerItemAdapter(this, R.layout.serverlist_item_layout, servers);
+        final ArrayAdapter<ServerInfo> adapter = new ServerItemAdapter(this, R.layout.serverlist_item_layout, serversList);
 
         serverList = findViewById(R.id.serverListView);
         serverList.setAdapter(adapter);
@@ -103,16 +106,11 @@ public class ServerSelectionActivity extends AppCompatActivity {
                     case MessageType.SERVER_DISCOVERED:
                         ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
                         Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
-                        servers.add(serverInfo);
+                        if(knownServers.get(serverInfo.getIp()) == null) {
+                            knownServers.put(serverInfo.getIp(), serverInfo.getName());
+                            serversList.add(serverInfo);
+                        }
                         adapter.notifyDataSetChanged();
-
-                        // Stop server discovery to free listener port
-                        // TODO: Move to button listener
-//                        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
-//                            playerServerDiscovery.quit();
-//                        }
-//                        registerRequest = new PlayerRegisterRequest(playerName, playerIp, serverInfo.getIp(), serverInfo.getPort(), mHandler);
-//                        registerRequest.start();
                         break;
                     case MessageType.REGISTER_REQUEST_EXPIRED:
                         Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);

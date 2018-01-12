@@ -5,10 +5,18 @@ import org.json.JSONObject;
 import java.net.DatagramPacket;
 
 public class PacketParser {
-    public static Packet getPacket(DatagramPacket datagram) {
+    public static Packet getPacketFromDatagram(DatagramPacket datagram) {
+        return parse(new String(datagram.getData()));
+    }
+
+    public static Packet getPacketFromString(String s) {
+        return parse(s);
+    }
+
+    private static Packet parse(String s) {
         Packet packet = null;
         try {
-            JSONObject payload = new JSONObject(new String(datagram.getData()));
+            JSONObject payload = new JSONObject(s);
 
             switch (payload.getString("type")) {
                 case "announce":

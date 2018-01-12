@@ -18,36 +18,42 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ChoosingModeActivity">
+        <activity android:name=".ChoosingModeActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ServerActivity">
+        <activity android:name=".ServerActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="dobble-project.dobble.ServerActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".ClientActivity">
+        <activity android:name=".ClientActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="dobble-project.dobble.ClientActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".GameActivity">
+        <activity android:name=".GameActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="dobble-project.dobble.GameActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".ServerSelectionActivity" />
-        <activity android:name=".ServerSetupActivity"></activity>
+        <activity android:name=".ServerSelectionActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ServerSetupActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

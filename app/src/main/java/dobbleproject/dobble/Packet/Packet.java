@@ -25,5 +25,14 @@ public abstract class Packet  {
         return createDatagram(createPayload(), destinationIp);
     }
 
+    public JSONObject getPayload() {
+        try {
+            return createPayload();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     protected abstract JSONObject createPayload() throws JSONException;
 }

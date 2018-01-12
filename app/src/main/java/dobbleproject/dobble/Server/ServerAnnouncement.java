@@ -21,16 +21,7 @@ public class ServerAnnouncement extends Thread {
 
     boolean isRunning = true;
 
-//    public ServerAnnouncement(String serverName, String serverIp, DatagramSocket broadcastSocket, String broadcastAddress, Handler uiHandler) {
-//        this.broadcastSocket = broadcastSocket;
-//        this.broadcastAddress = broadcastAddress;
-//        this.serverName = serverName;
-//        this.serverIp = serverIp;
-//        this.uiHandler = uiHandler;
-//    }
-
     public ServerAnnouncement(String serverName, String serverIp, String broadcastAddress, Handler uiHandler) {
-//        this.broadcastSocket = broadcastSocket;
         this.broadcastAddress = broadcastAddress;
         this.serverName = serverName;
         this.serverIp = serverIp;
@@ -60,6 +51,7 @@ public class ServerAnnouncement extends Thread {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 // TODO: Move isRunning to quit()
+                //Thread.currentThread().interrupt();
                 isRunning = false;
             }
         }

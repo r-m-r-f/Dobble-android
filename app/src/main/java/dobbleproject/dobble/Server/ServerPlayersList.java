@@ -30,4 +30,8 @@ public class ServerPlayersList {
     public static int getSize() {
         return players.size();
     }
+
+    public static synchronized ArrayList<Player> getList() {
+        return players;
+    }
 }

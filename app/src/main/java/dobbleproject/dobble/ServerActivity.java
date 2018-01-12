@@ -14,8 +14,11 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.net.ServerSocket;
 
+import dobbleproject.dobble.Player.PlayerInfo;
+import dobbleproject.dobble.Server.Player;
 import dobbleproject.dobble.Server.ServerPlayerRegistration;
 import dobbleproject.dobble.Server.ServerAnnouncement;
+import dobbleproject.dobble.Server.ServerPlayersList;
 import dobbleproject.dobble.Server.ServerSocketSingleton;
 
 public class ServerActivity extends AppCompatActivity {
@@ -65,18 +68,6 @@ public class ServerActivity extends AppCompatActivity {
             serverIp = WifiHelper.getIpAddress(wifiManager);
             broadcastAddress = WifiHelper.getBroadcastAddress(wifiManager);
 
-            //Set server socket
-            try {
-                ServerSocket ss = ServerSocketSingleton.getServerSocket();
-                if(ss != null) {
-                    ss.close();
-                }
-                ss = new ServerSocket(0, numberOfPlayers);
-                ServerSocketSingleton.setServerSocket(ss);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException();
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,6 +85,10 @@ public class ServerActivity extends AppCompatActivity {
                         if(serverAnnouncement != null && serverAnnouncement.isAlive()) {
                             serverAnnouncement.quit();
                         }
+                        for(Player p : ServerPlayersList.getList()) {
+                            PlayerInfo pf = p.getPlayerInfo();
+                            textView.append("List: registred " + pf.getName() + " " + pf.getIp() + "\n");
+                        }
                         isJobRunning = false;
                         // TODO: Start a new activity
                         break;
@@ -107,6 +102,20 @@ public class ServerActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(!isJobRunning) {
                     isJobRunning = true;
+
+                    //Set server socket
+                    try {
+                        ServerSocket ss = ServerSocketSingleton.getServerSocket();
+                        if(ss != null) {
+                            ss.close();
+                        }
+                        ss = new ServerSocket(0, numberOfPlayers);
+                        ServerSocketSingleton.setServerSocket(ss);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException();
+                    }
+
                     serverAnnouncement = new ServerAnnouncement(serverName, serverIp, broadcastAddress, mHandler);
                     serverPlayerRegistration = new ServerPlayerRegistration(serverName, serverIp, numberOfPlayers, mHandler);
 
