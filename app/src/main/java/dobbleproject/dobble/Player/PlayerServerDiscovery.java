@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
 
 import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageType;
@@ -45,7 +43,7 @@ public class PlayerServerDiscovery extends Thread {
         while(!isInterrupted() && isRunning) {
             try {
                 listenerSocket.receive(datagram);
-                response = PacketParser.getPacket(datagram);
+                response = PacketParser.getPacketFromDatagram(datagram);
 
                 if(response instanceof AnnouncementPacket) {
                     ServerInfo serverInfo = new ServerInfo(((AnnouncementPacket) response).getServerName(),

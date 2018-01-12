@@ -1,9 +1,11 @@
 package dobbleproject.dobble;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.Image;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,7 +18,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class GameActivity extends AppCompatActivity {
+import dobbleproject.dobble.Game.Card;
+import dobbleproject.dobble.Player.PlayerSocketReader;
+import dobbleproject.dobble.Server.Player;
+
+public class ClientGameActivity extends AppCompatActivity {
 
     List<Integer> images = new ArrayList<>();
     List<List<Integer>> indices  = new ArrayList<>();
@@ -24,10 +30,30 @@ public class GameActivity extends AppCompatActivity {
     int cardsLeft = 13;
     TextView number;
 
+    ArrayList<Card> hand;
+
+    Handler mHandler;
+
+    // Threads
+    PlayerSocketReader socketReader;
+
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what){
+                    case MessageType.HAND_DELIVERED:
+                        hand = msg.getData().getParcelableArrayList("hand");
+                        Toast.makeText(getApplicationContext(), "got hand: size " + hand.size(), Toast.LENGTH_LONG);
+                        break;
+                }
+            }
+        };
 
         number = findViewById(R.id.cardsLeft);
         setImagesFromResources();
@@ -35,6 +61,8 @@ public class GameActivity extends AppCompatActivity {
         setCardImages();
         setListeners();
         pickCard();
+
+        socketReader = new PlayerSocketReader(mHandler);
     }
 
     private void setImagesFromResources(){
@@ -101,7 +129,7 @@ public class GameActivity extends AppCompatActivity {
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             //Yes button clicked, do something
-                            Intent intent = new Intent(GameActivity.this, ClientActivity.class);
+                            Intent intent = new Intent(ClientGameActivity.this, ClientActivity.class);
                             startActivity(intent);
                         }
                     })

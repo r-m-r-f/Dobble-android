@@ -8,7 +8,9 @@ import android.util.Log;
 
 import org.json.JSONException;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -54,6 +56,11 @@ public class PlayerRegisterRequest extends Thread {
             playerSocket = PlayerSocketHandler.getSocket();
             InetAddress address = InetAddress.getByName(serverIp);
             playerSocket.connect(new InetSocketAddress(address,serverPort), AppConfiguration.SOCKET_TIMEOUT);
+
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(playerSocket.getOutputStream()));
+            out.write(new RegisterRequestPacket(playerName, playerIp, -1).getPayload().toString());
+            out.flush();
+            out.close();
 
             message = new Message();
             message.what = MessageType.PLAYER_REGISTERED;

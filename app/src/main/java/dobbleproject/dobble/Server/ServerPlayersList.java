@@ -27,7 +27,11 @@ public class ServerPlayersList {
         ServerPlayersList.players.clear();
     }
 
-    public static int getSize() {
+    public synchronized static int getSize() {
         return players.size();
+    }
+
+    public static synchronized ArrayList<Player> getList() {
+        return players;
     }
 }

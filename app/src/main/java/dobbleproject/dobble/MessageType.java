@@ -14,5 +14,7 @@ public class MessageType {
     public static final int REGISTER_REQUEST_EXPIRED = 7;
     public static final int PLAYER_REGISTERED = 8;
     public static final int REGISTER_REQUEST_ERROR = 9;
+    public static final int SOCKET_ERROR = 10;
+    public static final int HAND_DELIVERED = 11;
 
 }

@@ -37,6 +37,7 @@ public class ClientActivity extends AppCompatActivity {
                     Intent intent = new Intent(ClientActivity.this, ServerSelectionActivity.class);
                     intent.putExtra("playerName", playerName);
                     startActivity(intent);
+                    finish();
                 }
 
             }

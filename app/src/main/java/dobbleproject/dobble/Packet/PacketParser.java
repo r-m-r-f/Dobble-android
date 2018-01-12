@@ -3,12 +3,23 @@ package dobbleproject.dobble.Packet;
 import org.json.JSONObject;
 
 import java.net.DatagramPacket;
+import java.util.ArrayList;
+
+import dobbleproject.dobble.Game.Card;
 
 public class PacketParser {
-    public static Packet getPacket(DatagramPacket datagram) {
+    public static Packet getPacketFromDatagram(DatagramPacket datagram) {
+        return parse(new String(datagram.getData()));
+    }
+
+    public static Packet getPacketFromString(String s) {
+        return parse(s);
+    }
+
+    private static Packet parse(String s) {
         Packet packet = null;
         try {
-            JSONObject payload = new JSONObject(new String(datagram.getData()));
+            JSONObject payload = new JSONObject(s);
 
             switch (payload.getString("type")) {
                 case "announce":
@@ -22,6 +33,10 @@ public class PacketParser {
                     break;
                 case "accepted":
                     packet = new RegisterAcceptedPacket(payload.getString("name"), payload.getString("ip"), payload.getInt("port"));
+                    break;
+                case "setup":
+                    // TODO: Check if casting works
+                    packet = new GameSetupPacket((ArrayList<Card>)payload.get("hand"), payload.getInt("number"));
                     break;
             }
 

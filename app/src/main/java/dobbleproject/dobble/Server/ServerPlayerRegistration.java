@@ -4,13 +4,20 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import dobbleproject.dobble.MessageHelper;
 import dobbleproject.dobble.MessageType;
+import dobbleproject.dobble.Packet.Packet;
+import dobbleproject.dobble.Packet.PacketParser;
+import dobbleproject.dobble.Packet.RegisterAcceptedPacket;
+import dobbleproject.dobble.Packet.RegisterRequestPacket;
+import dobbleproject.dobble.Player.PlayerInfo;
 
 public class ServerPlayerRegistration extends Thread {
     private DatagramSocket listenerSocket = null;
@@ -62,10 +69,15 @@ public class ServerPlayerRegistration extends Thread {
                 Log.d("player registration", ss.toString());
                 Socket playerSocket = ss.accept();
 
-                // TODO: Change Player to Socket
-                ServerPlayersList.addPlayer(new Player(null, playerSocket));
-                registered++;
-
+                BufferedReader in = new BufferedReader(new InputStreamReader(playerSocket.getInputStream()));
+                String message = in.readLine();
+                Packet packet = PacketParser.getPacketFromString(message);
+                if(packet instanceof RegisterRequestPacket) {
+                    ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
+                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), playerSocket));
+                    registered++;
+                }
+                in.close();
                 uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + playerSocket.getInetAddress()));
             } catch (IOException e) {
                 e.printStackTrace();
