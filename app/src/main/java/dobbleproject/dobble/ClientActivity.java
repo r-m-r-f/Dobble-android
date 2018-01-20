@@ -8,14 +8,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 public class ClientActivity extends AppCompatActivity {
 
     Button joinGame;
-    Handler mHandler = new Handler();
-    // Server or client thread
-    GameJobThread thread;
-    boolean isJobRunning = false;
+    EditText playerNameBox;
 
     Context mContext;
 
@@ -25,25 +23,23 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
 
         joinGame = findViewById(R.id.joinButton);
+        playerNameBox = findViewById(R.id.playerNameBox);
+
         // Set context
         mContext = this.getApplicationContext();
 
         joinGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                String playerName = playerNameBox.getText().toString();
 
-                if(!isJobRunning) {
-                    isJobRunning = true;
-                    thread = new ClientThread(mContext, mHandler, "Client");
-                    thread.start();
-                    Log.d("main", "client started");
-                } else if(thread instanceof ClientThread) {
-                    thread.endJob();
-                    isJobRunning = false;
+                if(!playerName.isEmpty()) {
+                    Intent intent = new Intent(ClientActivity.this, ServerSelectionActivity.class);
+                    intent.putExtra("playerName", playerName);
+                    startActivity(intent);
+                    finish();
                 }
 
-                Intent intent = new Intent(ClientActivity.this, GameActivity.class);
-                startActivity(intent);
             }
         });
     }

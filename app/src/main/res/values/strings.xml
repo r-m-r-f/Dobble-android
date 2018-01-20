@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Dobble</string>
     <string name="title_activity_choosing_mode">ChoosingMode</string>
+    <string name="title_activity_client_dupa">ClientDupa</string>
 </resources>
