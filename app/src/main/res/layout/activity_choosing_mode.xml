@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:keepScreenOn="true"
     tools:context="dobbleproject.dobble.ChoosingModeActivity">
 
     <TextView
@@ -35,12 +36,12 @@
         android:layout_height="wrap_content"
         android:text="Player"
         android:textSize="20sp"
-        tools:layout_editor_absoluteX="232dp"
-        tools:layout_editor_absoluteY="394dp"
         app:layout_constraintBaseline_toBaselineOf="@+id/masterButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/masterButton"/>
+        app:layout_constraintStart_toEndOf="@+id/masterButton"
+        tools:layout_editor_absoluteX="232dp"
+        tools:layout_editor_absoluteY="394dp" />
 
 
 </android.support.constraint.ConstraintLayout>

@@ -1,5 +1,7 @@
 package dobbleproject.dobble.Packet;
 
+import android.util.Log;
+
 import org.json.JSONObject;
 
 import java.net.DatagramPacket;
@@ -36,7 +38,8 @@ public class PacketParser {
                     break;
                 case "setup":
                     // TODO: Check if casting works
-                    packet = new GameSetupPacket((ArrayList<Card>)payload.get("hand"), payload.getInt("number"));
+//                    Log.d("hand packet: ", );
+                    packet = new GameSetupPacket(payload.getJSONArray("hand"), payload.getInt("number"));
                     break;
             }
 

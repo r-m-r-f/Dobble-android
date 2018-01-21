@@ -1,8 +1,12 @@
 package dobbleproject.dobble.Server;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import dobbleproject.dobble.SocketWrapper;
 
 public class ServerPlayersList {
     private static ArrayList<Player> players = new ArrayList<>();
@@ -19,10 +23,8 @@ public class ServerPlayersList {
     public static synchronized void clearPlayers() throws IOException {
         // Close all sockets
         for(Player p : ServerPlayersList.players) {
-            Socket socket = p.getSocket();
-            if(socket != null) {
-                socket.close();
-            }
+            SocketWrapper s = p.getSocketWrapper();
+            s.close();
         }
         ServerPlayersList.players.clear();
     }

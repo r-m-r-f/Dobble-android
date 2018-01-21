@@ -18,6 +18,7 @@ import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Packet.RegisterAcceptedPacket;
 import dobbleproject.dobble.Packet.RegisterRequestPacket;
 import dobbleproject.dobble.Player.PlayerInfo;
+import dobbleproject.dobble.SocketWrapper;
 
 public class ServerPlayerRegistration extends Thread {
     private DatagramSocket listenerSocket = null;
@@ -67,17 +68,24 @@ public class ServerPlayerRegistration extends Thread {
         while (!isInterrupted() && registered < numberOfPlayers) {
             try {
                 Log.d("player registration", ss.toString());
-                Socket playerSocket = ss.accept();
+                Socket s = ss.accept();
+                SocketWrapper playerSocket = new SocketWrapper(s);
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(playerSocket.getInputStream()));
+                Log.d("registratered: ", playerSocket.getInetAddress().toString());
+
+                BufferedReader in = playerSocket.getReader();
                 String message = in.readLine();
                 Packet packet = PacketParser.getPacketFromString(message);
+
+                Log.d("packet type ", packet.getClass().toString());
+
+
                 if(packet instanceof RegisterRequestPacket) {
                     ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
                             ((RegisterRequestPacket) packet).getPlayerIp(), -1), playerSocket));
                     registered++;
                 }
-                in.close();
+//                in.close();
                 uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + playerSocket.getInetAddress()));
             } catch (IOException e) {
                 e.printStackTrace();

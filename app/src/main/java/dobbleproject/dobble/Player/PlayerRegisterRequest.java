@@ -27,6 +27,7 @@ import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Packet.RegisterAcceptedPacket;
 import dobbleproject.dobble.Packet.RegisterRequestPacket;
+import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerRegisterRequest extends Thread {
     private Handler uiHandler;
@@ -39,7 +40,7 @@ public class PlayerRegisterRequest extends Thread {
     private String serverIp;
     private int serverPort;
 
-    private Socket playerSocket = null;
+    private SocketWrapper playerSocket = null;
 
     public PlayerRegisterRequest(String playerName, String playerIp, String serverIp, int serverPort, Handler uiHandler) {
         this.playerName = playerName;
@@ -55,12 +56,17 @@ public class PlayerRegisterRequest extends Thread {
         try {
             playerSocket = PlayerSocketHandler.getSocket();
             InetAddress address = InetAddress.getByName(serverIp);
-            playerSocket.connect(new InetSocketAddress(address,serverPort), AppConfiguration.SOCKET_TIMEOUT);
+//            playerSocket.connect(new InetSocketAddress(address,serverPort), AppConfiguration.SOCKET_TIMEOUT);
+            playerSocket.connect(new InetSocketAddress(address, serverPort));
 
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(playerSocket.getOutputStream()));
-            out.write(new RegisterRequestPacket(playerName, playerIp, -1).getPayload().toString());
+            // Sleep before writing
+            sleep(300);
+
+            BufferedWriter out = playerSocket.getWriter();
+
+            out.write(new RegisterRequestPacket(playerName, playerIp, -1).toString());
             out.flush();
-            out.close();
+//            out.close();
 
             message = new Message();
             message.what = MessageType.PLAYER_REGISTERED;
@@ -68,6 +74,8 @@ public class PlayerRegisterRequest extends Thread {
             Log.d("register", "registered!");
         } catch (IOException e) {
             message.what = MessageType.REGISTER_REQUEST_ERROR;
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             uiHandler.sendMessage(message);

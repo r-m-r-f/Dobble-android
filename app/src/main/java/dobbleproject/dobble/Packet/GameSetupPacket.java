@@ -1,5 +1,6 @@
 package dobbleproject.dobble.Packet;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,6 +18,20 @@ public class GameSetupPacket extends Packet {
         this.playerNumber = playerNumber;
     }
 
+    public GameSetupPacket(JSONArray hand, int playerNumber) {
+        this.playerNumber = playerNumber;
+        this.hand = new ArrayList<>();
+
+        try {
+            for(int i=0; i < hand.length(); i++) {
+                JSONArray card = hand.getJSONArray(i);
+                this.hand.add(new Card(card));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public ArrayList<Card> getHand() {
         return hand;
     }
@@ -27,10 +42,15 @@ public class GameSetupPacket extends Packet {
 
     @Override
     protected JSONObject createPayload() throws JSONException {
+        JSONArray handJson = new JSONArray();
+        for(Card c : hand) {
+            handJson.put(c.toJson());
+        }
+
         JSONObject payload = new JSONObject();
         payload.put("type", "setup");
-        payload.put("hand", hand);
+        payload.put("hand", handJson);
         payload.put("number", playerNumber);
-        return null;
+        return payload;
     }
 }

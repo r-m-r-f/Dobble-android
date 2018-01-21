@@ -3,13 +3,15 @@ package dobbleproject.dobble.Player;
 import java.io.IOException;
 import java.net.Socket;
 
+import dobbleproject.dobble.SocketWrapper;
+
 /*
  */
 
 public class PlayerSocketHandler {
-    private static Socket socket = null;
+    private static SocketWrapper socket = null;
 
-    public static synchronized Socket getSocket(){
+    public static synchronized SocketWrapper getSocket(){
         return socket;
     }
 
@@ -17,7 +19,7 @@ public class PlayerSocketHandler {
         if(PlayerSocketHandler.socket != null) {
             PlayerSocketHandler.socket.close();
         }
-        PlayerSocketHandler.socket = socket;
+        PlayerSocketHandler.socket = new SocketWrapper(socket);
     }
 
     public static int getPort() {

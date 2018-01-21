@@ -34,5 +34,12 @@ public abstract class Packet  {
         return null;
     }
 
+    /*
+     */
+    @Override
+    public String toString() {
+        return getPayload().toString() + "\n";
+    }
+
     protected abstract JSONObject createPayload() throws JSONException;
 }

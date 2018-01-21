@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import dobbleproject.dobble.Game.Card;
+import dobbleproject.dobble.Game.Deck4;
 import dobbleproject.dobble.Player.PlayerSocketReader;
 import dobbleproject.dobble.Server.Player;
 
@@ -31,6 +32,7 @@ public class ClientGameActivity extends AppCompatActivity {
     TextView number;
 
     ArrayList<Card> hand;
+    Card currentCard = null;
 
     Handler mHandler;
 
@@ -50,6 +52,11 @@ public class ClientGameActivity extends AppCompatActivity {
                     case MessageType.HAND_DELIVERED:
                         hand = msg.getData().getParcelableArrayList("hand");
                         Toast.makeText(getApplicationContext(), "got hand: size " + hand.size(), Toast.LENGTH_LONG);
+                        currentCard = hand.get(0);
+                        displayCard();
+                        break;
+                    case MessageType.DEBUG:
+                        Toast.makeText(getApplicationContext(), "server responded!", Toast.LENGTH_LONG);
                         break;
                 }
             }
@@ -60,9 +67,10 @@ public class ClientGameActivity extends AppCompatActivity {
         setIndices();
         setCardImages();
         setListeners();
-        pickCard();
+        //pickCard();
 
         socketReader = new PlayerSocketReader(mHandler);
+        socketReader.start();
     }
 
     private void setImagesFromResources(){
@@ -135,6 +143,14 @@ public class ClientGameActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("No", null)
                     .show();
+        }
+    }
+
+    private void displayCard() {
+        int i = 0;
+        for(int idx : currentCard.getIndexes()) {
+            cardImages.get(i).setImageResource(images.get(idx));
+            i++;
         }
     }
 

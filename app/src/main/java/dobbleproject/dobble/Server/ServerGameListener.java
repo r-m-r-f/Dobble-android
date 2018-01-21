@@ -8,11 +8,13 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.logging.Handler;
 
+import dobbleproject.dobble.SocketWrapper;
+
 public class ServerGameListener extends Thread {
     private BufferedReader in;
     private int playerNumber;
     private Handler uiHandler;
-    private Socket playerSocket;
+    private SocketWrapper playerSocket;
 
     private boolean isRunning;
 
@@ -22,17 +24,11 @@ public class ServerGameListener extends Thread {
     }
     @Override
     public void run() {
-        try {
-            playerSocket = ServerPlayersList.getPlayer(playerNumber).getSocket();
-            in = new BufferedReader(new InputStreamReader(playerSocket.getInputStream()));
+        playerSocket = ServerPlayersList.getPlayer(playerNumber).getSocketWrapper();
+        in = playerSocket.getReader();
 
-            while (isRunning && !interrupted()) {
+        while (isRunning && !interrupted()) {
 
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
 

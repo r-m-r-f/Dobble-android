@@ -20,6 +20,7 @@ import java.util.Stack;
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
+import dobbleproject.dobble.Packet.AcknowledgementPacket;
 import dobbleproject.dobble.Packet.GameSetupPacket;
 import dobbleproject.dobble.Server.Player;
 import dobbleproject.dobble.Server.ServerPlayersList;
@@ -52,7 +53,7 @@ public class ServerGameActivity extends AppCompatActivity {
 
         ArrayList<ArrayList<Card>> playersHands = new ArrayList<>();
 
-        int numberOfCardsInHand = cards.size() % numberOfPlayers;
+        int numberOfCardsInHand = cards.size() / numberOfPlayers;
 
         for(int i = 0; i < numberOfPlayers; i++ ){
             ArrayList<Card> hand = new ArrayList<>();
@@ -63,7 +64,7 @@ public class ServerGameActivity extends AppCompatActivity {
         }
 
         // Send hands to players, probably will block ui
-        new SendHandTask().execute(playersHands);
+        new SendHandThread(playersHands).start();
 
 
         mHandler = new Handler() {
@@ -97,43 +98,74 @@ public class ServerGameActivity extends AppCompatActivity {
         cardImages.add((ImageView)findViewById(R.id.image3));
     }
 
-    class SendHandTask extends AsyncTask<ArrayList<ArrayList<Card>>, Void, Void> {
+    class SendHandThread extends Thread {
+        ArrayList<ArrayList<Card>> hands;
+
+        public SendHandThread(ArrayList<ArrayList<Card>> hands) {
+            this.hands = hands;
+        }
 
         @Override
-        protected Void doInBackground(ArrayList<ArrayList<Card>>[] arrayLists) {
-            ArrayList<ArrayList<Card>> hands = arrayLists[0];
-
+        public void run() {
             for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-                Socket s = ServerPlayersList.getPlayer(i).getSocket();
+                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
                 try {
-                    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+                    sleep(400);
+                    BufferedWriter out = s.getWriter();
 
                     GameSetupPacket packet = new GameSetupPacket(hands.get(i), i);
-                    out.write(packet.getPayload().toString());
+
+                    // Test connection
+                    //AcknowledgementPacket packet = new AcknowledgementPacket();
+
+                    out.write(packet.toString());
                     out.flush();
-                    out.close();
 
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
             }
-            return null;
         }
     }
+
+//    class SendHandTask extends AsyncTask<ArrayList<ArrayList<Card>>, Void, Void> {
+//
+//        @Override
+//        protected Void doInBackground(ArrayList<ArrayList<Card>>[] arrayLists) {
+//            ArrayList<ArrayList<Card>> hands = arrayLists[0];
+//
+//            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
+//                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
+//                try {
+//                    BufferedWriter out = s.getWriter();
+//
+//                    //GameSetupPacket packet = new GameSetupPacket(hands.get(i), i);
+//
+//                    // Test connection
+//                    AcknowledgementPacket packet = new AcknowledgementPacket();
+//
+//                    out.write(packet.toString());
+//                    out.flush();
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//            return null;
+//        }
+//    }
 
     class NewTurnTask extends AsyncTask<Player, Void, Void> {
 
         @Override
         protected Void doInBackground(Player... players) {
             for(Player p: players) {
-                Socket s = p.getSocket();
-
-                try {
-                    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                SocketWrapper s = p.getSocketWrapper();
+                BufferedWriter out = s.getWriter();
             }
             return null;
         }
