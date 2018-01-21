@@ -49,18 +49,18 @@
             android:id="@+id/image"
             android:layout_width="65dp"
             android:layout_height="92dp"
-            android:layout_alignBottom="@+id/image2"
-            android:layout_toStartOf="@+id/image3"
-            android:src="@drawable/banana"/>
+            android:layout_alignTop="@+id/image2"
+            android:layout_toStartOf="@+id/image1"
+            android:src="@drawable/banana" />
 
         <ImageView
             android:id="@+id/image1"
             android:layout_width="118dp"
             android:layout_height="75dp"
-            android:layout_below="@+id/image"
+            android:layout_below="@+id/image_server"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="13dp"
-            android:src="@drawable/budzik"/>
+            android:src="@drawable/budzik" />
 
         <ImageView
             android:id="@+id/image2"
@@ -69,15 +69,16 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_marginEnd="30dp"
-            android:src="@drawable/dom"/>
+            android:src="@drawable/dom" />
 
         <ImageView
             android:id="@+id/image3"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:layout_above="@+id/image2"
-            android:layout_toStartOf="@+id/image2"
-            android:src="@drawable/drzewo"/>
+            android:layout_below="@+id/image2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="11dp"
+            android:src="@drawable/drzewo" />
 
 
     </RelativeLayout>

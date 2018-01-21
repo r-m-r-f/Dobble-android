@@ -37,10 +37,12 @@ public class PacketParser {
                     packet = new RegisterAcceptedPacket(payload.getString("name"), payload.getString("ip"), payload.getInt("port"));
                     break;
                 case "setup":
-                    // TODO: Check if casting works
-//                    Log.d("hand packet: ", );
                     packet = new GameSetupPacket(payload.getJSONArray("hand"), payload.getInt("number"));
                     break;
+                case "newTurn":
+                    packet = new NewTurnPacket(payload.getJSONArray("card"));
+                    break;
+
             }
 
         } catch (Exception e) {

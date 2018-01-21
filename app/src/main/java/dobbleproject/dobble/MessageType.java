@@ -16,5 +16,6 @@ public class MessageType {
     public static final int REGISTER_REQUEST_ERROR = 9;
     public static final int SOCKET_ERROR = 10;
     public static final int HAND_DELIVERED = 11;
+    public static final int NEW_TURN = 12;
 
 }

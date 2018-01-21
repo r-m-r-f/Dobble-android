@@ -1,18 +1,15 @@
 package dobbleproject.dobble;
 
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
@@ -20,36 +17,54 @@ import java.util.Stack;
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
-import dobbleproject.dobble.Packet.AcknowledgementPacket;
 import dobbleproject.dobble.Packet.GameSetupPacket;
-import dobbleproject.dobble.Server.Player;
+import dobbleproject.dobble.Packet.NewTurnPacket;
 import dobbleproject.dobble.Server.ServerPlayersList;
 
 public class ServerGameActivity extends AppCompatActivity {
 
     List<Integer> images = new ArrayList<>();
-    List<ImageView> cardImages  = new ArrayList<>();
+    List<ImageView> cardImageView = new ArrayList<>();
 
     Deck deck;
     Card currentCard;
 
-
-
     int numberOfPlayers;
     Handler mHandler;
+
+    // Threads
+    SendHandThread sendHand;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_game);
 
+        setImagesFromResources();
+        setCardImages();
+
         numberOfPlayers = getIntent().getExtras().getInt("numberOfPlayers");
 
         deck = new Deck4();
+
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+            }
+        };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
         Stack<Card> cards = deck.getCards();
         Collections.shuffle(cards);
 
         currentCard = cards.pop();
+
+        Log.d("current card: ", currentCard.toString());
 
         ArrayList<ArrayList<Card>> playersHands = new ArrayList<>();
 
@@ -63,16 +78,20 @@ public class ServerGameActivity extends AppCompatActivity {
             playersHands.add(hand);
         }
 
-        // Send hands to players, probably will block ui
-        new SendHandThread(playersHands).start();
+        try {
+            // Send hands to players, probably will block ui
+            // TODO: Handle interruptions
+            sendHand = new SendHandThread(playersHands);
+            sendHand.start();
+            sendHand.join();
 
+            displayCard();
 
-        mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-            }
-        };
+            new NewTurnThread(currentCard).start();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setImagesFromResources(){
@@ -92,10 +111,16 @@ public class ServerGameActivity extends AppCompatActivity {
     }
 
     private void setCardImages(){
-        cardImages.add((ImageView)findViewById(R.id.image));
-        cardImages.add((ImageView)findViewById(R.id.image1));
-        cardImages.add((ImageView)findViewById(R.id.image2));
-        cardImages.add((ImageView)findViewById(R.id.image3));
+        cardImageView.add((ImageView)findViewById(R.id.image_server));
+        cardImageView.add((ImageView)findViewById(R.id.image1_server));
+        cardImageView.add((ImageView)findViewById(R.id.image2_server));
+        cardImageView.add((ImageView)findViewById(R.id.image3_server));
+    }
+
+    private void displayCard() {
+        for(int i = 0; i < cardImageView.size(); i++) {
+            cardImageView.get(i).setImageResource(images.get(currentCard.getIndexes().get(i)));
+        }
     }
 
     class SendHandThread extends Thread {
@@ -110,24 +135,54 @@ public class ServerGameActivity extends AppCompatActivity {
             for(int i = 0; i < ServerPlayersList.getSize(); i++) {
                 SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
                 try {
-                    sleep(400);
+//                    sleep(400);
                     BufferedWriter out = s.getWriter();
 
                     GameSetupPacket packet = new GameSetupPacket(hands.get(i), i);
-
-                    // Test connection
-                    //AcknowledgementPacket packet = new AcknowledgementPacket();
 
                     out.write(packet.toString());
                     out.flush();
 
                 } catch (IOException e) {
                     e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
+//                catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
 
             }
+        }
+    }
+
+    class NewTurnThread extends Thread {
+        Card card;
+
+        public NewTurnThread(Card card) {
+            this.card = card;
+        }
+
+        @Override
+        public void run() {
+            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
+                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
+                try {
+//                    sleep(400);
+                    BufferedWriter out = s.getWriter();
+
+                    NewTurnPacket packet = new NewTurnPacket(card);
+
+                    out.write(packet.toString());
+                    out.flush();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+            }
+
         }
     }
 
@@ -159,15 +214,15 @@ public class ServerGameActivity extends AppCompatActivity {
 //        }
 //    }
 
-    class NewTurnTask extends AsyncTask<Player, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Player... players) {
-            for(Player p: players) {
-                SocketWrapper s = p.getSocketWrapper();
-                BufferedWriter out = s.getWriter();
-            }
-            return null;
-        }
-    }
+//    class NewTurnTask extends AsyncTask<Player, Void, Void> {
+//
+//        @Override
+//        protected Void doInBackground(Player... players) {
+//            for(Player p: players) {
+//                SocketWrapper s = p.getSocketWrapper();
+//                BufferedWriter out = s.getWriter();
+//            }
+//            return null;
+//        }
+//    }
 }

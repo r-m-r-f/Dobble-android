@@ -18,6 +18,7 @@ import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.AcknowledgementPacket;
 import dobbleproject.dobble.Packet.GameSetupPacket;
+import dobbleproject.dobble.Packet.NewTurnPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Server.Player;
@@ -46,15 +47,9 @@ public class PlayerSocketReader extends Thread {
             while (isRunning && !interrupted()) {
                 String response = in.readLine();
 
-                Log.d("read something : ", Integer.toString(response.length()));
+//                Log.d("read something : ", Integer.toString(response.length()));
 
                 packet = PacketParser.getPacketFromString(response);
-
-                if(packet instanceof AcknowledgementPacket) {
-                    Message msg = new Message();
-                    msg.what = MessageType.DEBUG;
-                    uiHandler.sendMessage(msg);
-                }
 
                 if(packet instanceof GameSetupPacket) {
                     ArrayList<Card> hand = ((GameSetupPacket) packet).getHand();
@@ -64,6 +59,18 @@ public class PlayerSocketReader extends Thread {
 
                     Message msg = new Message();
                     msg.what = MessageType.HAND_DELIVERED;
+                    msg.setData(bundle);
+                    uiHandler.sendMessage(msg);
+                }
+
+                if(packet instanceof NewTurnPacket) {
+                    Card card = ((NewTurnPacket) packet).getCard();
+
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelable("card", card);
+
+                    Message msg = new Message();
+                    msg.what = MessageType.NEW_TURN;
                     msg.setData(bundle);
                     uiHandler.sendMessage(msg);
                 }
