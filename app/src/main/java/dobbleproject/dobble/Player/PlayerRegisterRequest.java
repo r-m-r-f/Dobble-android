@@ -22,7 +22,6 @@ import java.net.UnknownHostException;
 
 import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageType;
-import dobbleproject.dobble.Packet.AcknowledgementPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Packet.RegisterAcceptedPacket;

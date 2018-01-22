@@ -30,9 +30,6 @@ public class PacketParser {
                 case "register":
                     packet = new RegisterRequestPacket(payload.getString("name"), payload.getString("ip"), payload.getInt("port"));
                     break;
-                case "ack":
-                    packet = new AcknowledgementPacket();
-                    break;
                 case "accepted":
                     packet = new RegisterAcceptedPacket(payload.getString("name"), payload.getString("ip"), payload.getInt("port"));
                     break;
@@ -42,7 +39,6 @@ public class PacketParser {
                 case "newTurn":
                     packet = new NewTurnPacket(payload.getJSONArray("card"));
                     break;
-
             }
 
         } catch (Exception e) {

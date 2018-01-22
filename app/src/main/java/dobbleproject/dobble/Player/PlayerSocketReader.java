@@ -16,7 +16,6 @@ import java.util.ArrayList;
 
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.MessageType;
-import dobbleproject.dobble.Packet.AcknowledgementPacket;
 import dobbleproject.dobble.Packet.GameSetupPacket;
 import dobbleproject.dobble.Packet.NewTurnPacket;
 import dobbleproject.dobble.Packet.Packet;
