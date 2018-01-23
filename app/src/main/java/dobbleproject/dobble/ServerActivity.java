@@ -160,7 +160,7 @@ public class ServerActivity extends AppCompatActivity {
         }
 
         if(serverPlayerRegistration != null && serverPlayerRegistration.isAlive()) {
-            serverPlayerRegistration.quit();
+            //serverPlayerRegistration.quit();
         }
     }
 }

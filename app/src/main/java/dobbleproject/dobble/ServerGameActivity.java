@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +21,11 @@ import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
 import dobbleproject.dobble.Packet.GameSetupPacket;
 import dobbleproject.dobble.Packet.NewTurnPacket;
+import dobbleproject.dobble.Packet.Packet;
+import dobbleproject.dobble.Packet.PacketParser;
+import dobbleproject.dobble.Packet.RegisterRequestPacket;
+import dobbleproject.dobble.Player.PlayerInfo;
+import dobbleproject.dobble.Server.Player;
 import dobbleproject.dobble.Server.ServerPlayersList;
 
 public class ServerGameActivity extends AppCompatActivity {
@@ -88,6 +95,11 @@ public class ServerGameActivity extends AppCompatActivity {
             displayCard();
 
             new NewTurnThread(currentCard).start();
+            for(Player player : ServerPlayersList.getList()){
+                GameThread gameThread = new GameThread(player.getSocketWrapper());
+                gameThread.start();
+            }
+
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -185,6 +197,38 @@ public class ServerGameActivity extends AppCompatActivity {
 
         }
     }
+
+    class GameThread extends Thread {
+        SocketWrapper socketWrapper;
+
+        public GameThread(SocketWrapper socketWrapper) {
+            this.socketWrapper = socketWrapper;
+        }
+
+        @Override
+        public void run() {
+            Log.d("Server", "started thread");
+            while (!isInterrupted()) {
+                try {
+                    BufferedReader in = socketWrapper.getReader();
+                    String message = in.readLine();
+                    Packet packet = PacketParser.getPacketFromString(message);
+
+                    Log.d("packet type ", packet.getClass().toString());
+
+                    if (packet instanceof NewTurnPacket) {
+                        currentCard = ((NewTurnPacket) packet).getCard();
+                        new NewTurnThread(currentCard).start();
+                    }
+                }
+                catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+
 
 //    class SendHandTask extends AsyncTask<ArrayList<ArrayList<Card>>, Void, Void> {
 //
