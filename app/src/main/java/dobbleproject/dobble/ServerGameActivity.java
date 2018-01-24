@@ -95,10 +95,10 @@ public class ServerGameActivity extends AppCompatActivity {
             displayCard();
 
             new NewTurnThread(currentCard).start();
-            for(Player player : ServerPlayersList.getList()){
-                GameThread gameThread = new GameThread(player.getSocketWrapper());
-                gameThread.start();
-            }
+//            for(Player player : ServerPlayersList.getList()){
+//                GameThread gameThread = new GameThread(player.getSocketWrapper());
+//                gameThread.start();
+//            }
 
 
         } catch (InterruptedException e) {
@@ -198,36 +198,37 @@ public class ServerGameActivity extends AppCompatActivity {
         }
     }
 
-    class GameThread extends Thread {
-        SocketWrapper socketWrapper;
-
-        public GameThread(SocketWrapper socketWrapper) {
-            this.socketWrapper = socketWrapper;
-        }
-
-        @Override
-        public void run() {
-            Log.d("Server", "started thread");
-            while (!isInterrupted()) {
-                try {
-                    BufferedReader in = socketWrapper.getReader();
-                    String message = in.readLine();
-                    Packet packet = PacketParser.getPacketFromString(message);
-
-                    Log.d("packet type ", packet.getClass().toString());
-
-                    if (packet instanceof NewTurnPacket) {
-                        currentCard = ((NewTurnPacket) packet).getCard();
-                        new NewTurnThread(currentCard).start();
-                    }
-                }
-                catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-
-        }
-    }
+    // not working
+//    class GameThread extends Thread {
+//        SocketWrapper socketWrapper;
+//
+//        public GameThread(SocketWrapper socketWrapper) {
+//            this.socketWrapper = socketWrapper;
+//        }
+//
+//        @Override
+//        public void run() {
+//            Log.d("Server", "started thread");
+//            while (!isInterrupted()) {
+//                try {
+//                    BufferedReader in = socketWrapper.getReader();
+//                    String message = in.readLine();
+//                    Packet packet = PacketParser.getPacketFromString(message);
+//
+//                    Log.d("packet type ", packet.getClass().toString());
+//
+//                    if (packet instanceof NewTurnPacket) {
+//                        currentCard = ((NewTurnPacket) packet).getCard();
+//                        new NewTurnThread(currentCard).start();
+//                    }
+//                }
+//                catch(Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//        }
+//    }
 
 
 //    class SendHandTask extends AsyncTask<ArrayList<ArrayList<Card>>, Void, Void> {

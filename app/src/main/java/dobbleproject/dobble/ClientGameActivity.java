@@ -35,8 +35,8 @@ import dobbleproject.dobble.Server.ServerPlayersList;
 public class ClientGameActivity extends AppCompatActivity {
 
     List<Integer> images = new ArrayList<>();
-    //    List<List<Integer>> indices  = new ArrayList<>();
     List<ImageView> cardImageView = new ArrayList<>();
+    // Map holding imageView id as key and displayed image index
     HashMap<Integer, Integer> cardImages = new HashMap<>();
     int cardsLeft;
     TextView number;
@@ -133,11 +133,6 @@ public class ClientGameActivity extends AppCompatActivity {
 
 
     private void displayCard() {
-//        int i = 0;
-//        for(int idx : hand.get(currentPlayerCardIndex).getIndexes()) {
-//            cardImageView.get(i).setImageResource(images.get(idx));
-//            i++;
-//        }
         List<Integer> indexes = hand.get(currentPlayerCardIndex).getIndexes();
         for (int i = 0; i < cardImageView.size(); i++) {
 
@@ -163,12 +158,12 @@ public class ClientGameActivity extends AppCompatActivity {
                     if (hand != null) {
                         if (cardsLeft > 0) {
                             if (correctImageIndex == cardImages.get(v.getId())) {
-                                Toast.makeText(mContext, "Git", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "Correct!", Toast.LENGTH_SHORT).show();
                                 SendCardThread sendCardThread = new SendCardThread(hand.get(currentPlayerCardIndex));
                                 sendCardThread.start();
                             }
                             else {
-                                Toast.makeText(mContext, "Dupa", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "Wrong!", Toast.LENGTH_SHORT).show();
                             }
                             currentPlayerCardIndex++;
                             displayCard();
