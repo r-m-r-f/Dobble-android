@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import dobbleproject.dobble.Player.PlayerServerDiscovery;
-import dobbleproject.dobble.Player.PlayerSocketHandler;
+import dobbleproject.dobble.Player.PlayerWriterSocketHandler;
 import dobbleproject.dobble.Player.PlayerRegisterRequest;
 import dobbleproject.dobble.Server.ServerInfo;
 
@@ -89,8 +89,8 @@ public class ServerSelectionActivity extends AppCompatActivity {
             // Set player tcp socket
             Socket playerSocket = new Socket();
             playerSocket.bind(null);
-            PlayerSocketHandler.setSocket(playerSocket);
-            playerSocketPort = PlayerSocketHandler.getPort();
+            PlayerWriterSocketHandler.setSocket(playerSocket);
+            playerSocketPort = PlayerWriterSocketHandler.getPort();
 
             Log.d("player tcp port: ", Integer.toString(playerSocketPort));
         } catch (UnknownHostException e) {
@@ -133,7 +133,7 @@ public class ServerSelectionActivity extends AppCompatActivity {
                     case MessageType.PLAYER_REGISTERED:
                         Log.d("player registered", ServerSelectionActivity.this.toString());
                         //Start a new activity
-                        Intent intent = new Intent(ServerSelectionActivity.this, ClientGameActivity.class);
+                        Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
                         startActivity(intent);
                         break;
                 }

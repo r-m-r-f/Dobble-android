@@ -2,15 +2,13 @@ package dobbleproject.dobble;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class ClientActivity extends AppCompatActivity {
+public class PlayerActivity extends AppCompatActivity {
 
     Button joinGame;
     EditText playerNameBox;
@@ -34,7 +32,7 @@ public class ClientActivity extends AppCompatActivity {
                 String playerName = playerNameBox.getText().toString();
 
                 if(!playerName.isEmpty()) {
-                    Intent intent = new Intent(ClientActivity.this, ServerSelectionActivity.class);
+                    Intent intent = new Intent(PlayerActivity.this, ServerSelectionActivity.class);
                     intent.putExtra("playerName", playerName);
                     startActivity(intent);
                     finish();

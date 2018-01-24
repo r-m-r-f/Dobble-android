@@ -1,26 +1,23 @@
 package dobbleproject.dobble.Player;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.MessageType;
+import dobbleproject.dobble.Packet.ConfirmSelectionPacket;
 import dobbleproject.dobble.Packet.GameSetupPacket;
+import dobbleproject.dobble.Packet.NewHandPacket;
 import dobbleproject.dobble.Packet.NewTurnPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
-import dobbleproject.dobble.Server.Player;
+import dobbleproject.dobble.Packet.WrongSelectionPacket;
+import dobbleproject.dobble.Packet.StartGamePacket;
 import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerSocketReader extends Thread {
@@ -35,7 +32,7 @@ public class PlayerSocketReader extends Thread {
     public PlayerSocketReader(Handler uiHandler) {
         this.uiHandler = uiHandler;
 
-        playerSocket = PlayerSocketHandler.getSocket();
+        playerSocket = PlayerWriterSocketHandler.getSocket();
     }
 
     @Override
@@ -45,12 +42,11 @@ public class PlayerSocketReader extends Thread {
 
             while (isRunning && !interrupted()) {
                 String response = in.readLine();
-
-//                Log.d("read something : ", Integer.toString(response.length()));
-
                 packet = PacketParser.getPacketFromString(response);
 
-                if(packet instanceof GameSetupPacket) {
+                Class packetClass = packet.getClass();
+
+                if(packetClass == GameSetupPacket.class) {
                     ArrayList<Card> hand = ((GameSetupPacket) packet).getHand();
 
                     Bundle bundle = new Bundle();
@@ -61,8 +57,24 @@ public class PlayerSocketReader extends Thread {
                     msg.setData(bundle);
                     uiHandler.sendMessage(msg);
                 }
+                else if (packetClass == StartGamePacket.class){
+                    Message msg = new Message();
+                    msg.what = MessageType.NEW_GAME;
+                    uiHandler.sendMessage(msg);
 
-                if(packet instanceof NewTurnPacket) {
+                }
+                else if(packetClass == NewHandPacket.class) {
+                    ArrayList<Integer> handCardsIndexes = ((NewHandPacket) packet).getCardsIndexes();
+
+                    Bundle bundle = new Bundle();
+                    bundle.putIntegerArrayList("hand", handCardsIndexes);
+
+                    Message msg = new Message();
+                    msg.what = MessageType.HAND_DELIVERED;
+                    msg.setData(bundle);
+                    uiHandler.sendMessage(msg);
+                }
+                else if(packetClass == NewTurnPacket.class) {
                     Card card = ((NewTurnPacket) packet).getCard();
 
                     Bundle bundle = new Bundle();
@@ -71,6 +83,16 @@ public class PlayerSocketReader extends Thread {
                     Message msg = new Message();
                     msg.what = MessageType.NEW_TURN;
                     msg.setData(bundle);
+                    uiHandler.sendMessage(msg);
+                }
+                else if (packetClass == ConfirmSelectionPacket.class) {
+                    Message msg = new Message();
+                    msg.what = MessageType.CONFIRMED_SELECTION;
+                    uiHandler.sendMessage(msg);
+                }
+                else if(packetClass == WrongSelectionPacket.class) {
+                    Message msg = new Message();
+                    msg.what = MessageType.WRONG_SELECTION;
                     uiHandler.sendMessage(msg);
                 }
 

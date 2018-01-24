@@ -34,7 +34,7 @@ public class PlayerServerDiscovery extends Thread {
         Packet response;
 
         try {
-            listenerSocket = new DatagramSocket(AppConfiguration.LISTENER_PORT);
+            listenerSocket = new DatagramSocket(AppConfiguration.ANNOUNCEMENT_LISTENER_PORT);
         } catch (SocketException e) {
             Log.e("PlayerServerDiscovery", "can't create a socket");
             e.printStackTrace();

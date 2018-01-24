@@ -10,12 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Card implements Parcelable {
-    private int order;
+//    private int order;
     private List<Integer> indexes;
 
-    public Card(List<Integer> indexes, int order) {
+//    public Card(List<Integer> indexes, int order) {
+//        this.indexes = indexes;
+////        this.order = order;
+//    }
+
+    public Card(List<Integer> indexes) {
         this.indexes = indexes;
-        this.order = order;
+//        this.order = order;
     }
 
     // TODO: Implement order in json serialization, or remove it completly
@@ -30,16 +35,11 @@ public class Card implements Parcelable {
         }
     }
 
-    public JSONArray toJson() {
-        JSONArray json = new JSONArray();
-        for(int i=0; i < indexes.size(); i++) {
-            json.put(indexes.get(i));
-        }
-        return json;
+    public List<Integer> getIndexes() {
+        return indexes;
     }
 
     protected Card(Parcel in) {
-        order = in.readInt();
     }
 
     public static final Creator<Card> CREATOR = new Creator<Card>() {
@@ -54,8 +54,12 @@ public class Card implements Parcelable {
         }
     };
 
-    public List<Integer> getIndexes() {
-        return indexes;
+    public JSONArray toJson() {
+        JSONArray json = new JSONArray();
+        for(int i=0; i < indexes.size(); i++) {
+            json.put(indexes.get(i));
+        }
+        return json;
     }
 
     @Override
@@ -65,6 +69,5 @@ public class Card implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeInt(order);
     }
 }

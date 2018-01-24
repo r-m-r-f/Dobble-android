@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
-    tools:context="dobbleproject.dobble.ClientActivity">
+    tools:context="dobbleproject.dobble.PlayerActivity">
 
     <TextView
         android:id="@+id/editText"

@@ -8,7 +8,7 @@ import dobbleproject.dobble.SocketWrapper;
 /*
  */
 
-public class PlayerSocketHandler {
+public class PlayerWriterSocketHandler {
     private static SocketWrapper socket = null;
 
     public static synchronized SocketWrapper getSocket(){
@@ -16,10 +16,10 @@ public class PlayerSocketHandler {
     }
 
     public static synchronized void setSocket(Socket socket) throws IOException {
-        if(PlayerSocketHandler.socket != null) {
-            PlayerSocketHandler.socket.close();
+        if(PlayerWriterSocketHandler.socket != null) {
+            PlayerWriterSocketHandler.socket.close();
         }
-        PlayerSocketHandler.socket = new SocketWrapper(socket);
+        PlayerWriterSocketHandler.socket = new SocketWrapper(socket);
     }
 
     public static int getPort() {

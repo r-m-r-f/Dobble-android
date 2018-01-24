@@ -11,6 +11,7 @@ import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageHelper;
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.Packet;
@@ -71,7 +72,7 @@ public class ServerPlayerRegistration extends Thread {
                 Socket s = ss.accept();
                 SocketWrapper playerSocket = new SocketWrapper(s);
 
-                Log.d("registratered: ", playerSocket.getInetAddress().toString());
+                Log.d("registered: ", playerSocket.getInetAddress().toString());
 
                 BufferedReader in = playerSocket.getReader();
                 String message = in.readLine();
@@ -79,13 +80,14 @@ public class ServerPlayerRegistration extends Thread {
 
                 Log.d("packet type ", packet.getClass().toString());
 
-
                 if(packet instanceof RegisterRequestPacket) {
+                    String playerIp = ((RegisterRequestPacket) packet).getPlayerIp();
+                    Socket writerSocket = new Socket(playerIp, AppConfiguration.PLAYER_LISTENER_PORT);
+
                     ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
-                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), playerSocket));
+                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), playerSocket, new SocketWrapper(writerSocket)));
                     registered++;
                 }
-//                in.close();
                 uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + playerSocket.getInetAddress()));
             } catch (IOException e) {
                 e.printStackTrace();

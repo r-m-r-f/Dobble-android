@@ -7,16 +7,28 @@ public abstract class Deck {
     // Number of pictures on a card
     protected int order;
 
-//    public ArrayList<Card> getCards() {
+    protected ArrayList<Card> cards = new ArrayList<>();
+
+
+//    public Stack<Card> getCards() {
 //        return cards;
 //    }
-//    ArrayList<Card> cards = new ArrayList<>();
 
-    public Stack<Card> getCards() {
-        return cards;
+//    Stack<Card> cards = new Stack<>();
+
+    // TODO: throw IndexOutOfBoundsException
+    public Card getCard(int index) {
+        return cards.get(index);
     }
 
-    Stack<Card> cards = new Stack<>();
+    public Stack<Integer> getCardsIndexes() {
+        Stack<Integer> indexes = new Stack<>();
+
+        for(int i=0; i < cards.size(); i++) {
+            indexes.push(i);
+        }
+        return indexes;
+    }
 
     protected abstract void createDeck();
 

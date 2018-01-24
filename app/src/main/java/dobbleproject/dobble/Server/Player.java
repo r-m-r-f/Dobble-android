@@ -1,22 +1,25 @@
 package dobbleproject.dobble.Server;
 
-import java.net.Socket;
-
 import dobbleproject.dobble.Player.PlayerInfo;
 import dobbleproject.dobble.SocketWrapper;
 
 public class Player {
     private PlayerInfo playerInfo;
-    //private Socket socket;
-    private SocketWrapper socketWrapper;
+    private SocketWrapper readerSocket;
+    private SocketWrapper writerSocket;
 
-    public Player(PlayerInfo playerInfo, SocketWrapper socket) {
+    public Player(PlayerInfo playerInfo, SocketWrapper readerSocket, SocketWrapper writerSocket) {
         this.playerInfo = playerInfo;
-        this.socketWrapper = socket;
+        this.readerSocket = readerSocket;
+        this.writerSocket = writerSocket;
     }
 
-    public SocketWrapper getSocketWrapper() {
-        return socketWrapper;
+    public SocketWrapper getReaderSocket() {
+        return readerSocket;
+    }
+
+    public SocketWrapper getWriterSocket() {
+        return writerSocket;
     }
 
     public PlayerInfo getPlayerInfo() {

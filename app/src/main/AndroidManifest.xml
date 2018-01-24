@@ -37,7 +37,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ClientActivity"
+            android:name=".PlayerActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="dobble-project.dobble.ClientActivity" />
@@ -46,7 +46,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ClientGameActivity"
+            android:name=".PlayerGameActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="dobble-project.dobble.GameActivity" />

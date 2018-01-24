@@ -1,31 +1,21 @@
 package dobbleproject.dobble.Player;
 
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import org.json.JSONException;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 
 import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageType;
-import dobbleproject.dobble.Packet.Packet;
-import dobbleproject.dobble.Packet.PacketParser;
-import dobbleproject.dobble.Packet.RegisterAcceptedPacket;
 import dobbleproject.dobble.Packet.RegisterRequestPacket;
+import dobbleproject.dobble.Server.Player;
 import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerRegisterRequest extends Thread {
@@ -39,7 +29,7 @@ public class PlayerRegisterRequest extends Thread {
     private String serverIp;
     private int serverPort;
 
-    private SocketWrapper playerSocket = null;
+    private SocketWrapper playerWriterSocket = null;
 
     public PlayerRegisterRequest(String playerName, String playerIp, String serverIp, int serverPort, Handler uiHandler) {
         this.playerName = playerName;
@@ -53,19 +43,24 @@ public class PlayerRegisterRequest extends Thread {
     public void run() {
         Message message = new Message();
         try {
-            playerSocket = PlayerSocketHandler.getSocket();
+            playerWriterSocket = PlayerWriterSocketHandler.getSocket();
             InetAddress address = InetAddress.getByName(serverIp);
-//            playerSocket.connect(new InetSocketAddress(address,serverPort), AppConfiguration.SOCKET_TIMEOUT);
-            playerSocket.connect(new InetSocketAddress(address, serverPort));
+            playerWriterSocket.connect(new InetSocketAddress(address, serverPort));
 
             // Sleep before writing
             sleep(300);
 
-            BufferedWriter out = playerSocket.getWriter();
+            BufferedWriter out = playerWriterSocket.getWriter();
 
             out.write(new RegisterRequestPacket(playerName, playerIp, -1).toString());
             out.flush();
-//            out.close();
+
+            // Create listener socket
+            ServerSocket ss = new ServerSocket(AppConfiguration.PLAYER_LISTENER_PORT, 1);
+            PlayerReaderSocketHandler.setServerSocket(ss);
+
+            Socket readerSocket = ss.accept();
+            PlayerReaderSocketHandler.setSocket(readerSocket);
 
             message = new Message();
             message.what = MessageType.PLAYER_REGISTERED;

@@ -1,13 +1,8 @@
 package dobbleproject.dobble.Packet;
 
-import android.util.Log;
-
 import org.json.JSONObject;
 
 import java.net.DatagramPacket;
-import java.util.ArrayList;
-
-import dobbleproject.dobble.Game.Card;
 
 public class PacketParser {
     public static Packet getPacketFromDatagram(DatagramPacket datagram) {
@@ -36,9 +31,22 @@ public class PacketParser {
                 case "setup":
                     packet = new GameSetupPacket(payload.getJSONArray("hand"), payload.getInt("number"));
                     break;
+                case "hand":
+                    packet = new NewHandPacket(payload.getJSONArray("hand"), payload.getInt("playerNumber"));
+                    break;
                 case "newTurn":
                     packet = new NewTurnPacket(payload.getJSONArray("card"));
                     break;
+                case "start":
+                    packet = new StartGamePacket();
+                    break;
+                case "penalty":
+                    packet = new WrongSelectionPacket();
+                    break;
+                case "selected":
+                    packet = new SelectedPicturePacket(payload.getInt("card"), payload.getInt("picture"));
+                    break;
+
             }
 
         } catch (Exception e) {

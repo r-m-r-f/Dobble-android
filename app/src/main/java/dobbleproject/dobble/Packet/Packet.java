@@ -18,7 +18,7 @@ public abstract class Packet  {
     protected DatagramPacket createDatagram(JSONObject payload, String destinationIp) throws JSONException, UnknownHostException {
         byte[] bytes = toBytes(payload);
         InetAddress address = InetAddress.getByName(destinationIp);
-        return new DatagramPacket(bytes, bytes.length, address, AppConfiguration.LISTENER_PORT);
+        return new DatagramPacket(bytes, bytes.length, address, AppConfiguration.ANNOUNCEMENT_LISTENER_PORT);
     }
 
     public DatagramPacket getDatagram(String destinationIp) throws JSONException, UnknownHostException {

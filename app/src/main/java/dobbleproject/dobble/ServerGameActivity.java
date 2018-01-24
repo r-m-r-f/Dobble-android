@@ -1,10 +1,10 @@
 package dobbleproject.dobble;
 
+import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.BufferedWriter;
@@ -17,8 +17,9 @@ import java.util.Stack;
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
-import dobbleproject.dobble.Packet.GameSetupPacket;
-import dobbleproject.dobble.Packet.NewTurnPacket;
+import dobbleproject.dobble.Packet.NewHandPacket;
+import dobbleproject.dobble.Packet.StartGamePacket;
+import dobbleproject.dobble.Server.ServerGameSocketListener;
 import dobbleproject.dobble.Server.ServerPlayersList;
 
 public class ServerGameActivity extends AppCompatActivity {
@@ -27,14 +28,16 @@ public class ServerGameActivity extends AppCompatActivity {
     List<ImageView> cardImageView = new ArrayList<>();
 
     Deck deck;
-    Card currentCard;
+    int currentCardIndex;
 
     int numberOfPlayers;
     Handler mHandler;
 
     // Threads
     SendHandThread sendHand;
+    ArrayList<ServerGameSocketListener> socketListeners = new ArrayList<>();
 
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +53,17 @@ public class ServerGameActivity extends AppCompatActivity {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                super.handleMessage(msg);
+                switch (msg.what) {
+                    case MessageType.SELECTED_PICTURE:
+                        Bundle b = msg.getData();
+
+                        int selectedPicture = b.getInt("picture");
+                        if(checkMatching(selectedPicture)){
+                            currentCardIndex = b.getInt("card");
+                            displayCard();
+                        }
+                        break;
+                }
             }
         };
     }
@@ -59,19 +72,19 @@ public class ServerGameActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        Stack<Card> cards = deck.getCards();
+        Stack<Integer> cards = deck.getCardsIndexes();
         Collections.shuffle(cards);
 
-        currentCard = cards.pop();
+        currentCardIndex = cards.pop();
 
-        Log.d("current card: ", currentCard.toString());
+        ArrayList<ArrayList<Integer>> playersHands = new ArrayList<>();
 
-        ArrayList<ArrayList<Card>> playersHands = new ArrayList<>();
 
         int numberOfCardsInHand = cards.size() / numberOfPlayers;
 
+        // Create hands
         for(int i = 0; i < numberOfPlayers; i++ ){
-            ArrayList<Card> hand = new ArrayList<>();
+            ArrayList<Integer> hand = new ArrayList<>();
             for(int j = 0; j < numberOfCardsInHand; j++) {
                 hand.add(cards.pop());
             }
@@ -85,9 +98,18 @@ public class ServerGameActivity extends AppCompatActivity {
             sendHand.start();
             sendHand.join();
 
+            for(int i=0; i < numberOfPlayers; i++) {
+                ServerGameSocketListener listener = new ServerGameSocketListener(i, mHandler);
+                socketListeners.add(listener);
+            }
+
+            for(ServerGameSocketListener l: socketListeners) {
+                l.start();
+            }
+
             displayCard();
 
-            new NewTurnThread(currentCard).start();
+            new StartGameThread().start();
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -118,27 +140,38 @@ public class ServerGameActivity extends AppCompatActivity {
     }
 
     private void displayCard() {
+        List<Integer> currentCardIndexes = deck.getCard(currentCardIndex).getIndexes();
         for(int i = 0; i < cardImageView.size(); i++) {
-            cardImageView.get(i).setImageResource(images.get(currentCard.getIndexes().get(i)));
+            cardImageView.get(i).setImageResource(images.get(currentCardIndexes.get(i)));
         }
     }
 
-    class SendHandThread extends Thread {
-        ArrayList<ArrayList<Card>> hands;
+    private synchronized boolean checkMatching(int pictureIndex) {
+        Card currentCard = deck.getCard(currentCardIndex);
 
-        public SendHandThread(ArrayList<ArrayList<Card>> hands) {
+        if(currentCard.getIndexes().contains(pictureIndex)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // THREADS
+    class SendHandThread extends Thread {
+        ArrayList<ArrayList<Integer>> hands;
+
+        public SendHandThread(ArrayList<ArrayList<Integer>> hands) {
             this.hands = hands;
         }
 
         @Override
         public void run() {
             for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
+                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
                 try {
-//                    sleep(400);
                     BufferedWriter out = s.getWriter();
 
-                    GameSetupPacket packet = new GameSetupPacket(hands.get(i), i);
+                    NewHandPacket packet = new NewHandPacket(hands.get(i), i);
 
                     out.write(packet.toString());
                     out.flush();
@@ -146,30 +179,21 @@ public class ServerGameActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-//                catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-
             }
         }
     }
 
-    class NewTurnThread extends Thread {
-        Card card;
-
-        public NewTurnThread(Card card) {
-            this.card = card;
-        }
+    // TODO: Change to AsyncTask
+    class StartGameThread extends Thread {
 
         @Override
         public void run() {
             for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
+                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
                 try {
-//                    sleep(400);
                     BufferedWriter out = s.getWriter();
 
-                    NewTurnPacket packet = new NewTurnPacket(card);
+                    StartGamePacket packet = new StartGamePacket();
 
                     out.write(packet.toString());
                     out.flush();
@@ -177,10 +201,6 @@ public class ServerGameActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-//                catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-
             }
 
         }
@@ -193,7 +213,7 @@ public class ServerGameActivity extends AppCompatActivity {
 //            ArrayList<ArrayList<Card>> hands = arrayLists[0];
 //
 //            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-//                SocketWrapper s = ServerPlayersList.getPlayer(i).getSocketWrapper();
+//                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
 //                try {
 //                    BufferedWriter out = s.getWriter();
 //
@@ -219,7 +239,7 @@ public class ServerGameActivity extends AppCompatActivity {
 //        @Override
 //        protected Void doInBackground(Player... players) {
 //            for(Player p: players) {
-//                SocketWrapper s = p.getSocketWrapper();
+//                SocketWrapper s = p.getReaderSocket();
 //                BufferedWriter out = s.getWriter();
 //            }
 //            return null;
