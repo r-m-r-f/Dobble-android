@@ -40,6 +40,10 @@ public class ClientGameActivity extends AppCompatActivity {
     HashMap<Integer, Integer> cardImages = new HashMap<>();
     int cardsLeft;
     TextView number;
+    private TextView nTimeElapsed;
+    private Elapsed elapsed;
+    private Thread elapsedThread;
+
 
     ArrayList<Card> hand = null;
     Card currentPlayerCard = null;
@@ -60,6 +64,12 @@ public class ClientGameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         mContext = this;
+        nTimeElapsed = findViewById(R.id.timeElapsed);
+
+        if(elapsed == null){
+            elapsed = new Elapsed(mContext);
+            elapsedThread = new Thread(elapsed);
+        }
 
         mHandler = new Handler() {
             @Override
@@ -71,8 +81,12 @@ public class ClientGameActivity extends AppCompatActivity {
                         currentPlayerCardIndex = 0;
                         currentPlayerCard = hand.get(currentPlayerCardIndex);
 
+                        elapsedThread.start();
+                        elapsed.start();
+
                         updateCardsLeft();
                         displayCard();
+
                         setCardImages(currentPlayerCard.getIndexes());
                         break;
                     case MessageType.NEW_TURN:
@@ -83,6 +97,7 @@ public class ClientGameActivity extends AppCompatActivity {
                         correctImageIndex = serverIndexes.get(0);
 
                         Toast.makeText(mContext, "new turn! " + images.get(correctImageIndex), Toast.LENGTH_SHORT).show();
+
                         break;
 
                     case MessageType.DEBUG:
@@ -155,6 +170,7 @@ public class ClientGameActivity extends AppCompatActivity {
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    elapsed.stop();
                     if (hand != null) {
                         if (cardsLeft > 0) {
                             if (correctImageIndex == cardImages.get(v.getId())) {
@@ -168,7 +184,9 @@ public class ClientGameActivity extends AppCompatActivity {
                             currentPlayerCardIndex++;
                             displayCard();
                             updateCardsLeft();
+                            elapsed.start();
                         } else {
+                            elapsed.getAverage();
                             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
                             builder
                                     .setTitle("End of Game")
@@ -183,12 +201,24 @@ public class ClientGameActivity extends AppCompatActivity {
                                     })
                                     .setNegativeButton("No", null)
                                     .show();
+                            elapsedThread.interrupt();
+                            elapsedThread = null;
+                            elapsed = null;
                         }
 
                     }
                 }
             });
         }
+    }
+    public void updateTimerText(final String time){
+        runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+              nTimeElapsed.setText(time);
+
+          }
+      });
     }
 }
 
@@ -221,3 +251,4 @@ class SendCardThread extends Thread {
 
     }
 }
+
