@@ -25,6 +25,7 @@ public class MessageType {
     public static final int END_GAME = 18;
     public static final int NEW_HAND = 19;
     public static final int GAME_SETUP = 20;
+    public static final int PLAYER_READY = 21;
 //    public static final int
 
 }

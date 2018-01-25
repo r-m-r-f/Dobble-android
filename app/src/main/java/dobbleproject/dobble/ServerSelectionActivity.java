@@ -132,6 +132,7 @@ public class ServerSelectionActivity extends AppCompatActivity {
                         break;
                     case MessageType.PLAYER_REGISTERED:
                         Log.d("player registered", ServerSelectionActivity.this.toString());
+                        finish();
                         //Start a new activity
                         Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
                         startActivity(intent);
@@ -164,6 +165,8 @@ public class ServerSelectionActivity extends AppCompatActivity {
         if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
             playerServerDiscovery.quit();
         }
+
+        stopThreads();
     }
 
     private synchronized void stopThreads() {

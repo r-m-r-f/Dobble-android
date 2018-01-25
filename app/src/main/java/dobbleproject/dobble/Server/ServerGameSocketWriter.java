@@ -91,7 +91,8 @@ public class ServerGameSocketWriter {
     }
 
     public void quit() {
-        thread.quit();
+        if (thread.isAlive())
+            thread.quitSafely();
     }
 
 }

@@ -12,6 +12,7 @@ import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.HandClearedPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
+import dobbleproject.dobble.Packet.PlayerReadyPacket;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
 import dobbleproject.dobble.SocketWrapper;
 
@@ -61,7 +62,6 @@ public class ServerGameSocketReader extends Thread {
                     message.setData(bundle);
 
                     uiHandler.sendMessage(message);
-
                 }
                 else if(packetClass == HandClearedPacket.class) {
                     Bundle bundle = new Bundle();
@@ -73,13 +73,26 @@ public class ServerGameSocketReader extends Thread {
 
                     uiHandler.sendMessage(message);
                 }
+                else if (packetClass == PlayerReadyPacket.class) {
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("number", ((PlayerReadyPacket) packet).getPlayerNumber());
+
+                    Log.d("server socket reader", "index" + Integer.toString(((PlayerReadyPacket) packet).getPlayerNumber()));
+
+                    Message message = new Message();
+                    message.what = MessageType.PLAYER_READY;
+                    message.setData(bundle);
+
+                    uiHandler.sendMessage(message);
+                }
             } catch (IOException e) {
                 isRunning = false;
             }
-
-
         }
+    }
 
-
+    public void quit() {
+        if (isAlive())
+            interrupt();
     }
 }

@@ -49,6 +49,9 @@ public class ServerGameActivity extends AppCompatActivity {
 
     ArrayList<String> playersNames;
 
+    // Players that started their game activities
+    ArrayList<Boolean> playersReady;
+
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +64,13 @@ public class ServerGameActivity extends AppCompatActivity {
         numberOfPlayers = getIntent().getExtras().getInt("numberOfPlayers");
 
         deck = new Deck4();
+
+        // Players that started their game activities
+        // loop probably not needed
+        playersReady = new ArrayList<>(4);
+        for(int i = 0; i < numberOfPlayers; i++) {
+            playersReady.add(false);
+        }
 
         mHandler = new Handler() {
             @Override
@@ -107,14 +117,32 @@ public class ServerGameActivity extends AppCompatActivity {
                         promptEndGame(winnerName);
                     }
                         break;
+                    case MessageType.PLAYER_READY:
+                        int num = msg.getData().getInt("number");
+                        Log.d("server", "player ready index: " + Integer.toString(num));
+                        Log.d("server", "players ready array len: " + Integer.toString(playersReady.size()));
+                        playersReady.set(num, true);
+
+                        boolean allReady = true;
+                        for (Boolean b : playersReady){
+                            if(!b) allReady = false;
+                        }
+
+                        if(allReady) {
+                            // Start a new game
+                            for(int i = 0; i < numberOfPlayers; i++) {
+                                Handler wHandler = socketWriters.get(i).getHandler();
+
+                                Message message = new Message();
+                                message.what = MessageType.NEW_GAME;
+
+                                wHandler.sendMessage(message);
+                            }
+                        }
+                        break;
                 }
             }
         };
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         // Socket threads setup
         for(int i=0; i < numberOfPlayers; i++) {
@@ -129,6 +157,7 @@ public class ServerGameActivity extends AppCompatActivity {
             writerHandlers.add(writer.getHandler());
         }
 
+        // Send names
         playersNames = ServerPlayersList.getPlayersNames();
         for(int i = 0; i < numberOfPlayers; i++) {
             Handler wHandler = socketWriters.get(i).getHandler();
@@ -143,8 +172,13 @@ public class ServerGameActivity extends AppCompatActivity {
             message.setData(b);
             wHandler.sendMessage(message);
         }
+    }
 
-        // Create
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Get all card indexes
         Stack<Integer> cards = deck.getCardsIndexes();
         Collections.shuffle(cards);
 
@@ -164,8 +198,6 @@ public class ServerGameActivity extends AppCompatActivity {
 
         displayCard();
 
-
-
         // Send hands
         for(int i = 0; i < numberOfPlayers; i++) {
             Handler wHandler = socketWriters.get(i).getHandler();
@@ -179,16 +211,6 @@ public class ServerGameActivity extends AppCompatActivity {
             message.setData(b);
             wHandler.sendMessage(message);
         }
-
-        // Start a new game
-        for(int i = 0; i < numberOfPlayers; i++) {
-            Handler wHandler = socketWriters.get(i).getHandler();
-
-            Message message = new Message();
-            message.what = MessageType.NEW_GAME;
-
-            wHandler.sendMessage(message);
-        }
     }
 
     @Override
@@ -199,6 +221,12 @@ public class ServerGameActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        try {
+            cleanup();
+        } catch (IOException e) {
+            Log.d("server activity", "exception in onDestroy");
+            e.printStackTrace();
+        }
 
     }
 
@@ -256,15 +284,22 @@ public class ServerGameActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
-//                        Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
-//                        startActivity(intent);
+                        finish();
+                        Intent intent = new Intent(ServerGameActivity.this, ServerSetupActivity.class);
+                        startActivity(intent);
                     }
                 })
                 .setNegativeButton("No", null)
                 .show();
     }
 
-    private void cleanup() {
+    private void cleanup() throws IOException {
+        for(int i = 0; i < numberOfPlayers; i++) {
+            socketReaders.get(i).quit();
+            socketWriters.get(i).quit();
+        }
+
+        ServerPlayersList.clearPlayers();
 
     }
 }

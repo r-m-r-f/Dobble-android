@@ -92,10 +92,11 @@ public class ServerActivity extends AppCompatActivity {
                         }
                         isJobRunning = false;
 
+                        finish();
+
                         Intent i = new Intent(ServerActivity.this, ServerGameActivity.class);
                         i.putExtra("numberOfPlayers", numberOfPlayers);
                         startActivity(i);
-                        finish();
                         break;
                     // TODO: Handle other message types
                 }

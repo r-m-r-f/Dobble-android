@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import dobbleproject.dobble.Game.Card;
@@ -37,6 +38,7 @@ public class PlayerGameActivity extends AppCompatActivity {
     int cardsLeft;
 
     TextView number;
+    TextView playersNamesTextView;
     RelativeLayout cardBackground;
 
     // TODO: Create game setup
@@ -69,6 +71,7 @@ public class PlayerGameActivity extends AppCompatActivity {
         mContext = this;
 
         number = findViewById(R.id.cardsLeft);
+        playersNamesTextView = findViewById(R.id.players_names_textview);
         // TODO: Move background colors to colors.xml
         cardBackground = findViewById(R.id.player_card_background);
         cardBackground.setBackgroundColor(Color.LTGRAY);
@@ -80,19 +83,39 @@ public class PlayerGameActivity extends AppCompatActivity {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
+                Message message;
+                Bundle b;
                 switch (msg.what){
                     case MessageType.GAME_SETUP:
                         playerNames = msg.getData().getStringArrayList("names");
                         playerNumber = msg.getData().getInt("playerNumber");
+
+                        StringBuilder sb = new StringBuilder();
+                        for(int i = 0; i < playerNames.size(); i++) {
+                            sb.append(playerNames.get(i));
+                            sb.append(" ");
+                        }
+
+                        playersNamesTextView.setText(sb.toString());
                         break;
                     case MessageType.HAND_DELIVERED:
                         handCardsIndexes = msg.getData().getIntegerArrayList("hand");
                         Toast.makeText(mContext, "got hand: size " + handCardsIndexes.size(), Toast.LENGTH_LONG).show();
                         currentHandIndex = 0;
-                        updateCardsLeft();
-                        displayCard();
+
+                        message = new Message();
+                        message.what = MessageType.PLAYER_READY;
+
+                        b = new Bundle();
+                        b.putInt("number", playerNumber);
+
+                        Log.d("client player ready", Integer.toString(playerNumber));
+                        message.setData(b);
+                        writerHandler.sendMessage(message);
                         break;
                     case MessageType.NEW_GAME:
+                        updateCardsLeft();
+                        displayCard();
                         isClickable = true;
                         Toast.makeText(mContext, "New game!", Toast.LENGTH_SHORT).show();
                         break;
@@ -106,7 +129,7 @@ public class PlayerGameActivity extends AppCompatActivity {
                             updateCardsLeft();
                             isClickable = true;
                         } else {
-                            Message message = new Message();
+                            message = new Message();
                             message.what = MessageType.HAND_CLEARED;
                             writerHandler.sendMessage(message);
                         }
@@ -136,6 +159,11 @@ public class PlayerGameActivity extends AppCompatActivity {
                 }
             }
         };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         socketReader = new PlayerSocketReader(mHandler);
         socketReader.start();
@@ -144,6 +172,7 @@ public class PlayerGameActivity extends AppCompatActivity {
         socketWriter.start();
 
         writerHandler = socketWriter.getHandler();
+
     }
 
     @Override
@@ -153,6 +182,8 @@ public class PlayerGameActivity extends AppCompatActivity {
         try {
             cleanup();
         } catch (IOException e) {
+            Log.d("server activity", "exception in onDestroy");
+
             e.printStackTrace();
         }
     }
@@ -241,9 +272,9 @@ public class PlayerGameActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
+                        finish();
                         Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
                         startActivity(intent);
-                        finish();
                     }
                 })
                 .setNegativeButton("No", null)
@@ -251,6 +282,10 @@ public class PlayerGameActivity extends AppCompatActivity {
     }
 
     public void cleanup() throws IOException {
+        // Close sockets
+        PlayerReaderSocketHandler.close();
+        PlayerWriterSocketHandler.close();
+
         // Stop threads
         if(socketReader != null) {
             socketReader.quit();
@@ -259,9 +294,6 @@ public class PlayerGameActivity extends AppCompatActivity {
         if (socketWriter != null) {
             socketWriter.quit();
         }
-        // Close sockets
-        PlayerReaderSocketHandler.close();
-        PlayerWriterSocketHandler.close();
     }
 
 

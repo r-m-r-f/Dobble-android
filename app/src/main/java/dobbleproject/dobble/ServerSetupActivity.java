@@ -36,12 +36,13 @@ public class ServerSetupActivity extends AppCompatActivity {
                 }
 
                 if(serverName != null && !serverName.isEmpty() && numberOfPlayers != null && numberOfPlayers > 0) {
+//                    finish();
+
                     Intent intent = new Intent(ServerSetupActivity.this, ServerActivity.class);
                     intent.putExtra("serverName", serverName);
                     intent.putExtra("numberOfPlayers", numberOfPlayers);
 
                     startActivity(intent);
-                    finish();
                 }
 
 

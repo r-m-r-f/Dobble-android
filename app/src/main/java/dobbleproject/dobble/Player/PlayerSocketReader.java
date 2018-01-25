@@ -124,6 +124,7 @@ public class PlayerSocketReader extends Thread {
     }
 
     public synchronized void quit() {
-        interrupt();
+        if (isAlive())
+            interrupt();
     }
 }

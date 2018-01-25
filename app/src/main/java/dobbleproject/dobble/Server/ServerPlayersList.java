@@ -20,8 +20,7 @@ public class ServerPlayersList {
     public static synchronized void clearPlayers() throws IOException {
         // Close all sockets
         for(Player p : ServerPlayersList.players) {
-            SocketWrapper s = p.getReaderSocket();
-            s.close();
+            p.closeSockets();
         }
         ServerPlayersList.players.clear();
     }

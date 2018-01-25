@@ -34,6 +34,7 @@ public class PacketParser {
                 case "hand":
                     packet = new NewHandPacket(payload.getJSONArray("hand"));
                     break;
+                // TODO: Remove newTurn
                 case "newTurn":
                     packet = new NewTurnPacket(payload.getJSONArray("card"));
                     break;
@@ -54,6 +55,9 @@ public class PacketParser {
                     break;
                 case "end":
                     packet = new EndGamePacket(payload.getInt("winner"));
+                    break;
+                case "ready":
+                    packet = new PlayerReadyPacket(payload.getInt("number"));
                     break;
 
             }

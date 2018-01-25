@@ -15,6 +15,7 @@ import java.io.IOException;
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.HandClearedPacket;
 import dobbleproject.dobble.Packet.Packet;
+import dobbleproject.dobble.Packet.PlayerReadyPacket;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
 import dobbleproject.dobble.SocketWrapper;
 
@@ -32,6 +33,10 @@ public class PlayerSocketWriter {
         public boolean handleMessage(Message msg){
             Packet packet = null;
             switch (msg.what) {
+                case MessageType.PLAYER_READY:
+                    Log.d("player socket writer", Integer.toString(msg.getData().getInt("number")));
+                    packet = new PlayerReadyPacket(msg.getData().getInt("number"));
+                    break;
                 case MessageType.SELECTED_PICTURE:
                     Bundle b = msg.getData();
                     packet = new SelectedPicturePacket(b.getInt("card"), b.getInt("picture"));
@@ -45,7 +50,7 @@ public class PlayerSocketWriter {
 
             try {
                 // TODO: Refactor
-                Log.d("thread", packet.toString());
+                Log.d("player socket writer", packet.toString());
                 out.write(packet.toString());
                 out.flush();
 
@@ -77,7 +82,8 @@ public class PlayerSocketWriter {
     }
 
     public void quit() {
-        thread.quit();
+        if (thread.isAlive())
+            thread.quitSafely();
     }
 
 }
