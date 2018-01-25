@@ -13,6 +13,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import dobbleproject.dobble.MessageType;
+import dobbleproject.dobble.Packet.HandClearedPacket;
+import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
 import dobbleproject.dobble.SocketWrapper;
 
@@ -28,25 +30,29 @@ public class PlayerSocketWriter {
     Handler.Callback callback = new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg){
-                switch (msg.what) {
-                    case MessageType.SELECTED_PICTURE:
-                        Bundle b = msg.getData();
-                        SelectedPicturePacket packet = new SelectedPicturePacket(b.getInt("card"), b.getInt("picture"));
+            Packet packet = null;
+            switch (msg.what) {
+                case MessageType.SELECTED_PICTURE:
+                    Bundle b = msg.getData();
+                    packet = new SelectedPicturePacket(b.getInt("card"), b.getInt("picture"));
 
-                        Log.d("thread, selected pic", Integer.toString(b.getInt("card")) + " : " + Integer.toString(b.getInt("picture")));
+                    Log.d("thread, selected pic", Integer.toString(b.getInt("card")) + " : " + Integer.toString(b.getInt("picture")));
+                    break;
+                case MessageType.HAND_CLEARED:
+                    packet = new HandClearedPacket();
+                    break;
+            }
 
-                        try {
-                            // TODO: Refactor
-                            Log.d("thread", packet.toString());
-                            out.write(packet.toString());
-                            out.flush();
+            try {
+                // TODO: Refactor
+                Log.d("thread", packet.toString());
+                out.write(packet.toString());
+                out.flush();
 
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-                }
             return true;
         }
     };

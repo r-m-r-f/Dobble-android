@@ -22,7 +22,13 @@ public class PlayerWriterSocketHandler {
         PlayerWriterSocketHandler.socket = new SocketWrapper(socket);
     }
 
-    public static int getPort() {
+    public synchronized static int getPort() {
         return socket.getLocalPort();
+    }
+
+    public static synchronized void close() throws IOException {
+        if(socket != null) {
+            socket.close();
+        }
     }
 }

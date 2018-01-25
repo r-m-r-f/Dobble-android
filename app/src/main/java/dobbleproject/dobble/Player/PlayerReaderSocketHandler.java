@@ -26,11 +26,21 @@ public class PlayerReaderSocketHandler {
         return socket;
     }
 
-    public static void setSocket(Socket socket) {
+    public static void setSocket(Socket socket) throws IOException {
         if(PlayerReaderSocketHandler.socket != null) {
             PlayerReaderSocketHandler.socket.close();
         }
         PlayerReaderSocketHandler.socket = new SocketWrapper(socket);
+    }
+
+    public static synchronized void close() throws IOException {
+        if( socket != null) {
+            socket.close();
+        }
+
+        if (serverSocket != null) {
+            serverSocket.close();
+        }
     }
 
 

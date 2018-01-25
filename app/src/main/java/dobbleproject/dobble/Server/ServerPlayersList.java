@@ -33,4 +33,14 @@ public class ServerPlayersList {
     public static synchronized ArrayList<Player> getList() {
         return players;
     }
+
+    public static synchronized ArrayList<String> getPlayersNames() {
+        ArrayList<String> names = new ArrayList<>();
+
+        for(Player player: players) {
+            names.add(player.getPlayerInfo().getName());
+        }
+
+        return names;
+    }
 }

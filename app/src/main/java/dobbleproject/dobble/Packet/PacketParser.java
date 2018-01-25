@@ -29,10 +29,10 @@ public class PacketParser {
                     packet = new RegisterAcceptedPacket(payload.getString("name"), payload.getString("ip"), payload.getInt("port"));
                     break;
                 case "setup":
-                    packet = new GameSetupPacket(payload.getJSONArray("hand"), payload.getInt("number"));
+                    packet = new GameSetupPacket(payload.getJSONArray("players"), payload.getInt("number"));
                     break;
                 case "hand":
-                    packet = new NewHandPacket(payload.getJSONArray("hand"), payload.getInt("playerNumber"));
+                    packet = new NewHandPacket(payload.getJSONArray("hand"));
                     break;
                 case "newTurn":
                     packet = new NewTurnPacket(payload.getJSONArray("card"));
@@ -40,11 +40,20 @@ public class PacketParser {
                 case "start":
                     packet = new StartGamePacket();
                     break;
+                case "confirm":
+                    packet = new ConfirmSelectionPacket();
+                    break;
                 case "penalty":
                     packet = new WrongSelectionPacket();
                     break;
                 case "selected":
                     packet = new SelectedPicturePacket(payload.getInt("card"), payload.getInt("picture"));
+                    break;
+                case "handCleared":
+                    packet = new HandClearedPacket();
+                    break;
+                case "end":
+                    packet = new EndGamePacket(payload.getInt("winner"));
                     break;
 
             }

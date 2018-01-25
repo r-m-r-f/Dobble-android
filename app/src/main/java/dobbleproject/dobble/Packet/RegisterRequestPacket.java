@@ -11,7 +11,7 @@ public final class RegisterRequestPacket extends Packet {
     public RegisterRequestPacket(String playerName, String playerIp, int port) {
         this.playerName = playerName;
         this.playerIp = playerIp;
-        //this.port = port;
+        this.port = port;
     }
 
     public String getPlayerName() {

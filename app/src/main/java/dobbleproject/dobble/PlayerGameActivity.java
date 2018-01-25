@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
@@ -13,15 +14,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import dobbleproject.dobble.Game.Card;
 import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
+import dobbleproject.dobble.Player.PlayerReaderSocketHandler;
 import dobbleproject.dobble.Player.PlayerWriterSocketHandler;
 import dobbleproject.dobble.Player.PlayerSocketReader;
 import dobbleproject.dobble.Player.PlayerSocketWriter;
@@ -31,13 +35,17 @@ public class PlayerGameActivity extends AppCompatActivity {
     List<Integer> images = new ArrayList<>();
     List<ImageView> cardImageView = new ArrayList<>();
     int cardsLeft;
+
     TextView number;
+    RelativeLayout cardBackground;
 
     // TODO: Create game setup
     int playerNumber = -1;
 
     ArrayList<Integer> handCardsIndexes;
     int currentHandIndex;
+
+    ArrayList<String> playerNames;
 
     // TODO: Consider making deck static
     Deck deck = new Deck4();
@@ -46,9 +54,8 @@ public class PlayerGameActivity extends AppCompatActivity {
     boolean isClickable = false;
 
     Handler mHandler;
-    Context mContext;
-
     Handler writerHandler;
+    Context mContext;
 
     // Threads
     PlayerSocketReader socketReader;
@@ -61,15 +68,27 @@ public class PlayerGameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         mContext = this;
 
+        number = findViewById(R.id.cardsLeft);
+        // TODO: Move background colors to colors.xml
+        cardBackground = findViewById(R.id.player_card_background);
+        cardBackground.setBackgroundColor(Color.LTGRAY);
+
+        setImagesFromResources();
+        setCardImages();
+        setListeners();
+
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what){
+                    case MessageType.GAME_SETUP:
+                        playerNames = msg.getData().getStringArrayList("names");
+                        playerNumber = msg.getData().getInt("playerNumber");
+                        break;
                     case MessageType.HAND_DELIVERED:
                         handCardsIndexes = msg.getData().getIntegerArrayList("hand");
                         Toast.makeText(mContext, "got hand: size " + handCardsIndexes.size(), Toast.LENGTH_LONG).show();
                         currentHandIndex = 0;
-
                         updateCardsLeft();
                         displayCard();
                         break;
@@ -78,35 +97,45 @@ public class PlayerGameActivity extends AppCompatActivity {
                         Toast.makeText(mContext, "New game!", Toast.LENGTH_SHORT).show();
                         break;
                     case MessageType.CONFIRMED_SELECTION:
-                        isClickable = true;
                         currentHandIndex++;
-                        displayCard();
-                        updateCardsLeft();
+                        cardBackground.setBackgroundColor(Color.LTGRAY);
+
+                        // Check if any cards left
+                        if(currentHandIndex < handCardsIndexes.size()) {
+                            displayCard();
+                            updateCardsLeft();
+                            isClickable = true;
+                        } else {
+                            Message message = new Message();
+                            message.what = MessageType.HAND_CLEARED;
+                            writerHandler.sendMessage(message);
+                        }
                         break;
                     case MessageType.WRONG_SELECTION:
                         Toast.makeText(mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
 
                         // Block ui
                         isClickable = false;
-                        new CountDownTimer(2000, 500){
+                        cardBackground.setBackgroundColor(Color.RED);
+                        new CountDownTimer(1000, 500){
                             @Override
                             public void onTick(long l) {}
 
                             @Override
                             public void onFinish() {
                                 isClickable = true;
+                                cardBackground.setBackgroundColor(Color.LTGRAY);
                             }
-                        };
-
-
+                        }.start();
+                        break;
+                    case MessageType.END_GAME: {
+                        int winner = msg.getData().getInt("winner");
+                        String winnerName = winner == playerNumber ? "You": playerNames.get(winner);
+                        promptEndGame(winnerName);
+                    }
                 }
             }
         };
-
-        number = findViewById(R.id.cardsLeft);
-        setImagesFromResources();
-        setCardImages();
-        setListeners();
 
         socketReader = new PlayerSocketReader(mHandler);
         socketReader.start();
@@ -117,6 +146,20 @@ public class PlayerGameActivity extends AppCompatActivity {
         writerHandler = socketWriter.getHandler();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        try {
+            cleanup();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+// HELPER METHODS
+
+    //DO NOT EDIT
     private void setImagesFromResources(){
         images.add(R.drawable.banana);
         images.add(R.drawable.budzik);
@@ -154,7 +197,7 @@ public class PlayerGameActivity extends AppCompatActivity {
     }
 
     private void updateCardsLeft() {
-        cardsLeft = handCardsIndexes.size() - currentHandIndex - 1;
+        cardsLeft = handCardsIndexes.size() - currentHandIndex;
         number.setText(String.valueOf(cardsLeft));
     }
 
@@ -164,16 +207,12 @@ public class PlayerGameActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                    if(handCardsIndexes != null && isClickable) {
-                       if(cardsLeft > 0) {
+                       if(currentHandIndex < handCardsIndexes.size()) {
                            // TODO: Send selected picture to the server
 
                            int imageId = (Integer) imageView.getTag();
-                           Log.d("img tag", Integer.toString(imageId));
                            int imageIndex = images.indexOf(imageId);
-                           Log.d("idex of: ", Integer.toString(imageIndex));
                            int cardIndex = handCardsIndexes.get(currentHandIndex);
-
-                           Log.d("player", "card" + deck.getCard(cardIndex).getIndexes() + ", picture "+ Integer.toString(imageIndex));
 
                            Bundle b = new Bundle();
                            b.putInt("card", cardIndex);
@@ -185,30 +224,45 @@ public class PlayerGameActivity extends AppCompatActivity {
                            writerHandler.sendMessage(msg);
 
                            isClickable = false;
-
-//                           currentHandIndex++;
-//                           displayCard();
-//                           updateCardsLeft();
-                       } else {
-                           AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                           builder
-                                   .setTitle("End of Game")
-                                   .setMessage("Play again?")
-                                   .setIcon(android.R.drawable.ic_dialog_alert)
-                                   .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog, int which) {
-                                           //Yes button clicked, do something
-                                           Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
-                                           startActivity(intent);
-                                       }
-                                   })
-                                   .setNegativeButton("No", null)
-                                   .show();
+                           cardBackground.setBackgroundColor(Color.GREEN);
                        }
-
                    }
                 }
             });
         }
     }
+
+    private void promptEndGame(String winnerName) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder
+                .setTitle("End of Game")
+                .setMessage(winnerName + " won! Play again?")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Yes button clicked, do something
+                        Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    public void cleanup() throws IOException {
+        // Stop threads
+        if(socketReader != null) {
+            socketReader.quit();
+        }
+
+        if (socketWriter != null) {
+            socketWriter.quit();
+        }
+        // Close sockets
+        PlayerReaderSocketHandler.close();
+        PlayerWriterSocketHandler.close();
+    }
+
+
 }

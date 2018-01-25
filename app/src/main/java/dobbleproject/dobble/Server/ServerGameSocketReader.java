@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import dobbleproject.dobble.MessageType;
+import dobbleproject.dobble.Packet.HandClearedPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
@@ -61,6 +62,16 @@ public class ServerGameSocketReader extends Thread {
 
                     uiHandler.sendMessage(message);
 
+                }
+                else if(packetClass == HandClearedPacket.class) {
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("number", playerNumber);
+
+                    Message message = new Message();
+                    message.what = MessageType.HAND_CLEARED;
+                    message.setData(bundle);
+
+                    uiHandler.sendMessage(message);
                 }
             } catch (IOException e) {
                 isRunning = false;

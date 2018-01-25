@@ -23,7 +23,6 @@ import dobbleproject.dobble.SocketWrapper;
 
 public class ServerPlayerRegistration extends Thread {
     private DatagramSocket listenerSocket = null;
-    private DatagramSocket senderSocket = null;
 
     private Handler uiHandler;
 
@@ -52,19 +51,22 @@ public class ServerPlayerRegistration extends Thread {
         }
 
         //Set server socket
-        ServerSocket ss = null;
-        try {
-            ss = ServerSocketSingleton.getServerSocket();
-            if(ss != null) {
-                ss.close();
-            }
-            ss = new ServerSocket(0, numberOfPlayers);
-            ServerSocketSingleton.setServerSocket(ss);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+//        ServerSocket ss = null;
+//        try {
+//            ss = ServerSocketSingleton.getServerSocket();
+//            if(ss != null) {
+//                ss.close();
+//            }
+//            ss = new ServerSocket(0, numberOfPlayers);
+//            ServerSocketSingleton.setServerSocket(ss);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            throw new RuntimeException();
+//        }
 
+        ServerSocket ss = ServerSocketSingleton.getServerSocket();
+        if(ss == null)
+            throw new RuntimeException();
 
         while (!isInterrupted() && registered < numberOfPlayers) {
             try {
@@ -81,8 +83,10 @@ public class ServerPlayerRegistration extends Thread {
                 Log.d("packet type ", packet.getClass().toString());
 
                 if(packet instanceof RegisterRequestPacket) {
+                    // Create writer socket
                     String playerIp = ((RegisterRequestPacket) packet).getPlayerIp();
-                    Socket writerSocket = new Socket(playerIp, AppConfiguration.PLAYER_LISTENER_PORT);
+                    int playerPort = ((RegisterRequestPacket) packet).getPort();
+                    Socket writerSocket = new Socket(playerIp, playerPort);
 
                     ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
                             ((RegisterRequestPacket) packet).getPlayerIp(), -1), readerSocket, new SocketWrapper(writerSocket)));
@@ -107,13 +111,13 @@ public class ServerPlayerRegistration extends Thread {
             listenerSocket.close();
         }
 
-        if(ServerSocketSingleton.getServerSocket() != null) {
-            try {
-                ServerSocketSingleton.getServerSocket().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if(ServerSocketSingleton.getServerSocket() != null) {
+//            try {
+//                ServerSocketSingleton.getServerSocket().close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
         uiHandler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
     }
 

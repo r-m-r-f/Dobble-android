@@ -12,6 +12,8 @@ import java.io.IOException;
 
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.ConfirmSelectionPacket;
+import dobbleproject.dobble.Packet.EndGamePacket;
+import dobbleproject.dobble.Packet.GameSetupPacket;
 import dobbleproject.dobble.Packet.NewHandPacket;
 import dobbleproject.dobble.Packet.Packet;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
@@ -32,14 +34,19 @@ public class ServerGameSocketWriter {
         @Override
         public boolean handleMessage(Message msg){
             Packet packet = null;
+            Bundle b;
             Log.d("in server writer", Integer.toString(msg.what));
             switch (msg.what) {
+                case MessageType.GAME_SETUP:
+                    b = msg.getData();
+                    packet = new GameSetupPacket(b.getStringArrayList("players"), b.getInt("number"));
+                    break;
                 case MessageType.NEW_GAME:
                     packet = new StartGamePacket();
                     break;
                 case MessageType.NEW_HAND:
-                    Bundle b = msg.getData();
-                    packet = new NewHandPacket(b.getIntegerArrayList("hand"), b.getInt("number"));
+                    b = msg.getData();
+                    packet = new NewHandPacket(b.getIntegerArrayList("hand"));
                     break;
                 case MessageType.CONFIRMED_SELECTION:
                     packet = new ConfirmSelectionPacket();
@@ -47,7 +54,9 @@ public class ServerGameSocketWriter {
                 case MessageType.WRONG_SELECTION:
                     packet = new WrongSelectionPacket();
                     break;
-
+                case MessageType.END_GAME:
+                    packet = new EndGamePacket(msg.getData().getInt("winner"));
+                    break;
             }
 
             try {

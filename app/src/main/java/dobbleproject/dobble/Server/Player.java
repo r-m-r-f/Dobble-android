@@ -1,5 +1,7 @@
 package dobbleproject.dobble.Server;
 
+import java.io.IOException;
+
 import dobbleproject.dobble.Player.PlayerInfo;
 import dobbleproject.dobble.SocketWrapper;
 
@@ -24,5 +26,10 @@ public class Player {
 
     public PlayerInfo getPlayerInfo() {
         return playerInfo;
+    }
+
+    public void closeSockets() throws IOException {
+        readerSocket.close();
+        writerSocket.close();
     }
 }

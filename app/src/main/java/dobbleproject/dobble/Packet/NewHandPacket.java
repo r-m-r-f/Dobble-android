@@ -8,14 +8,12 @@ import java.util.ArrayList;
 
 public class NewHandPacket extends Packet {
     private ArrayList<Integer> cardsIndexes = new ArrayList<>();
-    private int playerNumber;
 
-    public NewHandPacket(ArrayList<Integer> cardsIndexes, int playerNumber) {
+    public NewHandPacket(ArrayList<Integer> cardsIndexes) {
         this.cardsIndexes = cardsIndexes;
-        this.playerNumber = playerNumber;
     }
 
-    public NewHandPacket(JSONArray cardsIndexes, int playerNumber) {
+    public NewHandPacket(JSONArray cardsIndexes) {
         try {
             for(int i=0; i < cardsIndexes.length(); i++) {
                 this.cardsIndexes.add(cardsIndexes.getInt(i));
@@ -23,16 +21,10 @@ public class NewHandPacket extends Packet {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        this.playerNumber = playerNumber;
     }
 
     public ArrayList<Integer> getCardsIndexes() {
         return cardsIndexes;
-    }
-
-    public int getPlayerNumber() {
-        return playerNumber;
     }
 
 
@@ -43,7 +35,6 @@ public class NewHandPacket extends Packet {
 
         payload.put("type", "hand");
         payload.put("hand", cardsIndexesJson);
-        payload.put("playerNumber", playerNumber);
         return payload;
     }
 }

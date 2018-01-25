@@ -43,21 +43,18 @@ public class PlayerRegisterRequest extends Thread {
     public void run() {
         Message message = new Message();
         try {
+            // Create listener socket
+            ServerSocket ss = new ServerSocket(0, 1);
+            PlayerReaderSocketHandler.setServerSocket(ss);
+
             playerWriterSocket = PlayerWriterSocketHandler.getSocket();
             InetAddress address = InetAddress.getByName(serverIp);
             playerWriterSocket.connect(new InetSocketAddress(address, serverPort));
 
-            // Sleep before writing
-//            sleep(300);
-
             BufferedWriter out = playerWriterSocket.getWriter();
 
-            out.write(new RegisterRequestPacket(playerName, playerIp, -1).toString());
+            out.write(new RegisterRequestPacket(playerName, playerIp, ss.getLocalPort()).toString());
             out.flush();
-
-            // Create listener socket
-            ServerSocket ss = new ServerSocket(AppConfiguration.PLAYER_LISTENER_PORT, 1);
-            PlayerReaderSocketHandler.setServerSocket(ss);
 
             Socket readerSocket = ss.accept();
             PlayerReaderSocketHandler.setSocket(readerSocket);

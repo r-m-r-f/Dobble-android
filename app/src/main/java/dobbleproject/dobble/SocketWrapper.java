@@ -56,20 +56,16 @@ public class SocketWrapper {
         return socket.getInetAddress();
     }
 
-    public synchronized void close() {
-        try {
-            if(writer != null) {
-                writer.close();
-            }
-
-            if(reader != null) {
-                reader.close();
-            }
-
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public synchronized void close() throws IOException {
+        if(writer != null) {
+            writer.close();
         }
+
+        if(reader != null) {
+            reader.close();
+        }
+
+        socket.close();
     }
 
 }
