@@ -70,11 +70,11 @@ public class ServerPlayerRegistration extends Thread {
             try {
                 Log.d("player registration", ss.toString());
                 Socket s = ss.accept();
-                SocketWrapper playerSocket = new SocketWrapper(s);
+                SocketWrapper readerSocket = new SocketWrapper(s);
 
-                Log.d("registered: ", playerSocket.getInetAddress().toString());
+                Log.d("registered: ", readerSocket.getInetAddress().toString());
 
-                BufferedReader in = playerSocket.getReader();
+                BufferedReader in = readerSocket.getReader();
                 String message = in.readLine();
                 Packet packet = PacketParser.getPacketFromString(message);
 
@@ -85,10 +85,10 @@ public class ServerPlayerRegistration extends Thread {
                     Socket writerSocket = new Socket(playerIp, AppConfiguration.PLAYER_LISTENER_PORT);
 
                     ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
-                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), playerSocket, new SocketWrapper(writerSocket)));
+                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), readerSocket, new SocketWrapper(writerSocket)));
                     registered++;
                 }
-                uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + playerSocket.getInetAddress()));
+                uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + readerSocket.getInetAddress()));
             } catch (IOException e) {
                 e.printStackTrace();
             }

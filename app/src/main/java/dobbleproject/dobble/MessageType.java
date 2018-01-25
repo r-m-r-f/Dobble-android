@@ -23,7 +23,7 @@ public class MessageType {
     public static final int WRONG_SELECTION = 16;
     public static final int HAND_CLEARED = 17;
     public static final int END_GAME = 18;
-//    public static final int
+    public static final int NEW_HAND = 19;
 //    public static final int
 
 }

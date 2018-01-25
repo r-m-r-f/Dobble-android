@@ -32,7 +32,7 @@ public class PlayerSocketReader extends Thread {
     public PlayerSocketReader(Handler uiHandler) {
         this.uiHandler = uiHandler;
 
-        playerSocket = PlayerWriterSocketHandler.getSocket();
+        playerSocket = PlayerReaderSocketHandler.getSocket();
     }
 
     @Override

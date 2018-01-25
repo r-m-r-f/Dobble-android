@@ -14,42 +14,44 @@ import dobbleproject.dobble.Packet.PacketParser;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
 import dobbleproject.dobble.SocketWrapper;
 
-public class ServerGameSocketListener extends Thread {
+public class ServerGameSocketReader extends Thread {
     private BufferedReader in;
     private int playerNumber;
     private Handler uiHandler;
-    private SocketWrapper playerSocket;
+    private SocketWrapper readerSocket;
 
     private Packet packet;
 
     private boolean isRunning;
 
-    public ServerGameSocketListener(int playerNumber, Handler uiHandler) {
+    public ServerGameSocketReader(int playerNumber, Handler uiHandler) {
         this.playerNumber = playerNumber;
         this.uiHandler = uiHandler;
     }
     @Override
     public void run() {
-        playerSocket = ServerPlayersList.getPlayer(playerNumber).getReaderSocket();
-        in = playerSocket.getReader();
+        readerSocket = ServerPlayersList.getPlayer(playerNumber).getReaderSocket();
+        in = readerSocket.getReader();
 
         isRunning = true;
+        Log.d("server listener", "startted listening");
 
         while (isRunning && !interrupted()) {
             try {
-                Log.d("server listener", "startted listening");
                 String response = in.readLine();
                 packet = PacketParser.getPacketFromString(response);
 
                 Class packetClass = packet.getClass();
+                Log.d("server listener", "got class" + packetClass.getName());
 
                 if(packetClass == SelectedPicturePacket.class) {
                     int cardIndex = ((SelectedPicturePacket)packet).getCardIndex();
-                    int pictureIndex = ((SelectedPicturePacket) packet).getCardIndex();
+                    int pictureIndex = ((SelectedPicturePacket) packet).getPictureIndex();
 
-                    Log.d("selected pic", Integer.toString(cardIndex) + " : " + Integer.toString(pictureIndex));
+                    Log.d("server,selected pic", Integer.toString(cardIndex) + " : " + Integer.toString(pictureIndex));
 
                     Bundle bundle = new Bundle();
+                    bundle.putInt("number", playerNumber);
                     bundle.putInt("card", cardIndex);
                     bundle.putInt("picture", pictureIndex);
 

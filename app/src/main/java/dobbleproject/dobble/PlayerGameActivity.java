@@ -170,7 +170,10 @@ public class PlayerGameActivity extends AppCompatActivity {
                            int imageId = (Integer) imageView.getTag();
                            Log.d("img tag", Integer.toString(imageId));
                            int imageIndex = images.indexOf(imageId);
+                           Log.d("idex of: ", Integer.toString(imageIndex));
                            int cardIndex = handCardsIndexes.get(currentHandIndex);
+
+                           Log.d("player", "card" + deck.getCard(cardIndex).getIndexes() + ", picture "+ Integer.toString(imageIndex));
 
                            Bundle b = new Bundle();
                            b.putInt("card", cardIndex);
@@ -181,9 +184,11 @@ public class PlayerGameActivity extends AppCompatActivity {
                            msg.setData(b);
                            writerHandler.sendMessage(msg);
 
-                           currentHandIndex++;
-                           displayCard();
-                           updateCardsLeft();
+                           isClickable = false;
+
+//                           currentHandIndex++;
+//                           displayCard();
+//                           updateCardsLeft();
                        } else {
                            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
                            builder

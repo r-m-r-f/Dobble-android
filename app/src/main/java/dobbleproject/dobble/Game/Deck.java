@@ -9,13 +9,6 @@ public abstract class Deck {
 
     protected ArrayList<Card> cards = new ArrayList<>();
 
-
-//    public Stack<Card> getCards() {
-//        return cards;
-//    }
-
-//    Stack<Card> cards = new Stack<>();
-
     // TODO: throw IndexOutOfBoundsException
     public Card getCard(int index) {
         return cards.get(index);

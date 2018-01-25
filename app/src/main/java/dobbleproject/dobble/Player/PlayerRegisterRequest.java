@@ -48,7 +48,7 @@ public class PlayerRegisterRequest extends Thread {
             playerWriterSocket.connect(new InetSocketAddress(address, serverPort));
 
             // Sleep before writing
-            sleep(300);
+//            sleep(300);
 
             BufferedWriter out = playerWriterSocket.getWriter();
 
@@ -69,9 +69,11 @@ public class PlayerRegisterRequest extends Thread {
         } catch (IOException e) {
             message.what = MessageType.REGISTER_REQUEST_ERROR;
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
+        }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+        finally {
             uiHandler.sendMessage(message);
         }
     }

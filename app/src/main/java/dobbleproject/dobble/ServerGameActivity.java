@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.BufferedWriter;
@@ -19,7 +20,8 @@ import dobbleproject.dobble.Game.Deck;
 import dobbleproject.dobble.Game.Deck4;
 import dobbleproject.dobble.Packet.NewHandPacket;
 import dobbleproject.dobble.Packet.StartGamePacket;
-import dobbleproject.dobble.Server.ServerGameSocketListener;
+import dobbleproject.dobble.Server.ServerGameSocketReader;
+import dobbleproject.dobble.Server.ServerGameSocketWriter;
 import dobbleproject.dobble.Server.ServerPlayersList;
 
 public class ServerGameActivity extends AppCompatActivity {
@@ -34,8 +36,9 @@ public class ServerGameActivity extends AppCompatActivity {
     Handler mHandler;
 
     // Threads
-    SendHandThread sendHand;
-    ArrayList<ServerGameSocketListener> socketListeners = new ArrayList<>();
+//    SendHandThread sendHand;
+    ArrayList<ServerGameSocketReader> socketReaders = new ArrayList<>();
+    ArrayList<ServerGameSocketWriter> socketWriters = new ArrayList<>();
 
     @SuppressLint("HandlerLeak")
     @Override
@@ -58,10 +61,23 @@ public class ServerGameActivity extends AppCompatActivity {
                         Bundle b = msg.getData();
 
                         int selectedPicture = b.getInt("picture");
-                        if(checkMatching(selectedPicture)){
-                            currentCardIndex = b.getInt("card");
+                        int selectedCard = b.getInt("card");
+                        int number = b.getInt("number");
+
+                        Log.d("server", "matches: " + checkMatching(selectedPicture));
+
+                        Handler writerHandler = socketWriters.get(number).getHandler();
+                        Message message = new Message();
+
+                        if(checkMatching(selectedPicture)) {
+                            message.what = MessageType.CONFIRMED_SELECTION;
+                            currentCardIndex = selectedCard;
                             displayCard();
+                        } else {
+                            message.what = MessageType.WRONG_SELECTION;
                         }
+                        writerHandler.sendMessage(message);
+
                         break;
                 }
             }
@@ -78,8 +94,6 @@ public class ServerGameActivity extends AppCompatActivity {
         currentCardIndex = cards.pop();
 
         ArrayList<ArrayList<Integer>> playersHands = new ArrayList<>();
-
-
         int numberOfCardsInHand = cards.size() / numberOfPlayers;
 
         // Create hands
@@ -94,26 +108,58 @@ public class ServerGameActivity extends AppCompatActivity {
         try {
             // Send hands to players, probably will block ui
             // TODO: Handle interruptions
-            sendHand = new SendHandThread(playersHands);
-            sendHand.start();
-            sendHand.join();
+//            sendHand = new SendHandThread(playersHands);
+//            sendHand.start();
+//            sendHand.join();
 
             for(int i=0; i < numberOfPlayers; i++) {
-                ServerGameSocketListener listener = new ServerGameSocketListener(i, mHandler);
-                socketListeners.add(listener);
-            }
+                ServerGameSocketReader reader = new ServerGameSocketReader(i, mHandler);
+                socketReaders.add(reader);
+                reader.start();
 
-            for(ServerGameSocketListener l: socketListeners) {
-                l.start();
+                ServerGameSocketWriter writer = new ServerGameSocketWriter(ServerPlayersList.getPlayer(i).getWriterSocket());
+                socketWriters.add(writer);
+                writer.start();
             }
 
             displayCard();
 
-            new StartGameThread().start();
+            // Send hands
+            for(int i = 0; i < numberOfPlayers; i++) {
+                Handler wHandler = socketWriters.get(i).getHandler();
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+                Message message = new Message();
+                message.what = MessageType.NEW_HAND;
+
+                Bundle b = new Bundle();
+                b.putIntegerArrayList("hand", playersHands.get(i));
+                b.putInt("number", i);
+
+                message.setData(b);
+                wHandler.sendMessage(message);
+            }
+
+            // Start a new game
+            for(int i = 0; i < numberOfPlayers; i++) {
+                Handler wHandler = socketWriters.get(i).getHandler();
+
+                Message message = new Message();
+                message.what = MessageType.NEW_GAME;
+
+//                Bundle b = new Bundle();
+//                b.putIntegerArrayList("hand", playersHands.get(i));
+//                b.putInt("number", i);
+//
+//                message.setData(b);
+                wHandler.sendMessage(message);
+            }
+
+            //new StartGameThread().start();
+
+        } catch (Exception e) { e.printStackTrace();}
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void setImagesFromResources(){
@@ -148,79 +194,31 @@ public class ServerGameActivity extends AppCompatActivity {
 
     private synchronized boolean checkMatching(int pictureIndex) {
         Card currentCard = deck.getCard(currentCardIndex);
-
-        if(currentCard.getIndexes().contains(pictureIndex)) {
-            return true;
-        } else {
-            return false;
+        Log.d("server", currentCard.getIndexes().toString()+ " " + Integer.toString(pictureIndex));
+        for(int i: currentCard.getIndexes()) {
+            if(i == pictureIndex)
+                return true;
         }
+        return false;
+
     }
 
     // THREADS
-    class SendHandThread extends Thread {
-        ArrayList<ArrayList<Integer>> hands;
-
-        public SendHandThread(ArrayList<ArrayList<Integer>> hands) {
-            this.hands = hands;
-        }
-
-        @Override
-        public void run() {
-            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
-                try {
-                    BufferedWriter out = s.getWriter();
-
-                    NewHandPacket packet = new NewHandPacket(hands.get(i), i);
-
-                    out.write(packet.toString());
-                    out.flush();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    // TODO: Change to AsyncTask
-    class StartGameThread extends Thread {
-
-        @Override
-        public void run() {
-            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
-                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
-                try {
-                    BufferedWriter out = s.getWriter();
-
-                    StartGamePacket packet = new StartGamePacket();
-
-                    out.write(packet.toString());
-                    out.flush();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        }
-    }
-
-//    class SendHandTask extends AsyncTask<ArrayList<ArrayList<Card>>, Void, Void> {
+//    class SendHandThread extends Thread {
+//        ArrayList<ArrayList<Integer>> hands;
+//
+//        public SendHandThread(ArrayList<ArrayList<Integer>> hands) {
+//            this.hands = hands;
+//        }
 //
 //        @Override
-//        protected Void doInBackground(ArrayList<ArrayList<Card>>[] arrayLists) {
-//            ArrayList<ArrayList<Card>> hands = arrayLists[0];
-//
+//        public void run() {
 //            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
 //                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
 //                try {
 //                    BufferedWriter out = s.getWriter();
 //
-//                    //GameSetupPacket packet = new GameSetupPacket(hands.get(i), i);
-//
-//                    // Test connection
-//                    AcknowledgementPacket packet = new AcknowledgementPacket();
+//                    NewHandPacket packet = new NewHandPacket(hands.get(i), i);
 //
 //                    out.write(packet.toString());
 //                    out.flush();
@@ -228,21 +226,30 @@ public class ServerGameActivity extends AppCompatActivity {
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }
-//
 //            }
-//            return null;
 //        }
 //    }
-
-//    class NewTurnTask extends AsyncTask<Player, Void, Void> {
+//
+//    // TODO: Change to AsyncTask
+//    class StartGameThread extends Thread {
 //
 //        @Override
-//        protected Void doInBackground(Player... players) {
-//            for(Player p: players) {
-//                SocketWrapper s = p.getReaderSocket();
-//                BufferedWriter out = s.getWriter();
+//        public void run() {
+//            for(int i = 0; i < ServerPlayersList.getSize(); i++) {
+//                SocketWrapper s = ServerPlayersList.getPlayer(i).getReaderSocket();
+//                try {
+//                    BufferedWriter out = s.getWriter();
+//
+//                    StartGamePacket packet = new StartGamePacket();
+//
+//                    out.write(packet.toString());
+//                    out.flush();
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
 //            }
-//            return null;
+//
 //        }
 //    }
 }

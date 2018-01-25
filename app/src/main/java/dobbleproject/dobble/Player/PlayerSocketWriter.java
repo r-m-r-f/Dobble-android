@@ -16,35 +16,30 @@ import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.SelectedPicturePacket;
 import dobbleproject.dobble.SocketWrapper;
 
-public class PlayerSocketWriter extends Thread {
+public class PlayerSocketWriter {
+
+    private HandlerThread thread;
     private SocketWrapper socket = null;
     private int playerNumber;
     private Handler mHandler;
 
-    BufferedWriter in;
+    BufferedWriter out;
 
-    private  boolean isRunning = false;
-
-    @SuppressLint("HandlerLeak")
-    public PlayerSocketWriter(SocketWrapper socket, int playerNumber) {
-        this.socket = socket;
-        this.playerNumber = playerNumber;
-
-        in = socket.getWriter();
-
-        mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
+    Handler.Callback callback = new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg){
                 switch (msg.what) {
                     case MessageType.SELECTED_PICTURE:
                         Bundle b = msg.getData();
                         SelectedPicturePacket packet = new SelectedPicturePacket(b.getInt("card"), b.getInt("picture"));
 
-                        Log.d("selected pic", Integer.toString(b.getInt("card")) + " : " + Integer.toString(b.getInt("picture")));
+                        Log.d("thread, selected pic", Integer.toString(b.getInt("card")) + " : " + Integer.toString(b.getInt("picture")));
 
                         try {
                             // TODO: Refactor
-                            in.write(packet.toString());
+                            Log.d("thread", packet.toString());
+                            out.write(packet.toString());
+                            out.flush();
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -52,39 +47,31 @@ public class PlayerSocketWriter extends Thread {
                         break;
 
                 }
-            }
-        };
+            return true;
+        }
+    };
+
+    @SuppressLint("HandlerLeak")
+    public PlayerSocketWriter(SocketWrapper socket, int playerNumber) {
+        this.socket = socket;
+        this.playerNumber = playerNumber;
+
+        out = socket.getWriter();
+
+        thread = new HandlerThread("playersocketwriter");
     }
 
     public synchronized Handler getHandler() {
         return mHandler;
     }
 
-    @SuppressLint("HandlerLeak")
-    @Override
-    public void run() {
-        isRunning = true;
-
-
-        Looper.prepare();
-        Looper.loop();
+    public void start() {
+        thread.start();
+        mHandler = new Handler(thread.getLooper(), callback);
     }
-}
 
-//public class PlayerSocketWriter extends Handler {
-//
-//    private SocketWrapper socket = null;
-//    private int playerNumber;
-//
-//
-//    public PlayerSocketWriter(SocketWrapper socket, int playerNumber) {
-//        this.socket = socket;
-//        this.playerNumber = playerNumber;
-//
-//    }
-//
-//    @Override
-//    public void handleMessage(Message msg) {
-//        super.handleMessage(msg);
-//    }
-//}
+    public void quit() {
+        thread.quit();
+    }
+
+}
