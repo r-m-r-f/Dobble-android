@@ -26,9 +26,9 @@ public class PlayerWriterSocketHandler {
         return socket.getLocalPort();
     }
 
-    public static synchronized void close() throws IOException {
-        if(socket != null) {
-            socket.close();
+    public static void close() throws IOException {
+        if(PlayerWriterSocketHandler.socket != null) {
+            PlayerWriterSocketHandler.socket.close();
         }
     }
 }

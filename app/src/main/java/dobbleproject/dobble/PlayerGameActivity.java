@@ -272,6 +272,7 @@ public class PlayerGameActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
+                        //finish();
                         finish();
                         Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
                         startActivity(intent);
@@ -284,15 +285,20 @@ public class PlayerGameActivity extends AppCompatActivity {
     public void cleanup() throws IOException {
         // Close sockets
         PlayerReaderSocketHandler.close();
+        Log.d("player cleanup", "reader socket closed");
         PlayerWriterSocketHandler.close();
+        Log.d("player cleanup", "writer socket closed");
+
 
         // Stop threads
         if(socketReader != null) {
             socketReader.quit();
+            Log.d("player cleanup", "reader socket thread closed");
         }
 
         if (socketWriter != null) {
             socketWriter.quit();
+            Log.d("player cleanup", "writer socket thread closed");
         }
     }
 

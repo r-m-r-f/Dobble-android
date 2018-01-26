@@ -69,7 +69,7 @@ public class PlayerSocketWriter {
 
         out = socket.getWriter();
 
-        thread = new HandlerThread("playersocketwriter");
+        thread = new HandlerThread("playersocketwriter"+playerNumber);
     }
 
     public synchronized Handler getHandler() {
@@ -82,8 +82,12 @@ public class PlayerSocketWriter {
     }
 
     public void quit() {
+        Boolean result = null;
+        thread.interrupt();
         if (thread.isAlive())
-            thread.quitSafely();
+             result = thread.quitSafely();
+
+        Log.d("player socket writer", "thread quit: " + Boolean.toString(result));
     }
 
 }

@@ -33,13 +33,13 @@ public class PlayerReaderSocketHandler {
         PlayerReaderSocketHandler.socket = new SocketWrapper(socket);
     }
 
-    public static synchronized void close() throws IOException {
-        if( socket != null) {
-            socket.close();
+    public static void close() throws IOException {
+        if( PlayerReaderSocketHandler.socket != null) {
+            PlayerReaderSocketHandler.socket.close();
         }
 
-        if (serverSocket != null) {
-            serverSocket.close();
+        if (PlayerReaderSocketHandler.serverSocket != null) {
+            PlayerReaderSocketHandler.serverSocket.close();
         }
     }
 

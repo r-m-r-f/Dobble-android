@@ -227,7 +227,6 @@ public class ServerGameActivity extends AppCompatActivity {
             Log.d("server activity", "exception in onDestroy");
             e.printStackTrace();
         }
-
     }
 
 

@@ -67,9 +67,6 @@ public class PlayerRegisterRequest extends Thread {
             message.what = MessageType.REGISTER_REQUEST_ERROR;
             e.printStackTrace();
         }
-//        catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         finally {
             uiHandler.sendMessage(message);
         }

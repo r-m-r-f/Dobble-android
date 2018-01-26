@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import dobbleproject.dobble.Game.Card;
@@ -27,7 +28,7 @@ public class PlayerSocketReader extends Thread {
     private Handler uiHandler;
     private SocketWrapper playerSocket;
 
-    private Packet packet;
+    private Packet packet = null;
 
     private boolean isRunning = true;
 
@@ -44,11 +45,15 @@ public class PlayerSocketReader extends Thread {
 
             while (isRunning && !interrupted()) {
                 String response = in.readLine();
-                Log.d("player reader", "response: " + response);
-                packet = PacketParser.getPacketFromString(response);
+                if (response != null) {
+                    Log.d("player reader", "response: " + response);
+                    packet = PacketParser.getPacketFromString(response);
+                }
 
-                Class packetClass = packet.getClass();
-
+                Class packetClass = null;
+                if (packet != null) {
+                    packetClass = packet.getClass();
+                }
                 // TODO: Refactor
                 if(packetClass == GameSetupPacket.class) {
                     ArrayList<String> playersNames = ((GameSetupPacket) packet).getPlayerNames();
@@ -115,16 +120,19 @@ public class PlayerSocketReader extends Thread {
                 // TODO: Handle game logic
 
             }
+        } catch (SocketException e) {
+            isRunning = false;
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException();
         }
 
         Log.d("player socket reader", "quits");
     }
 
-    public synchronized void quit() {
+    public void quit() {
         if (isAlive())
             interrupt();
+        isRunning = false;
+
     }
 }

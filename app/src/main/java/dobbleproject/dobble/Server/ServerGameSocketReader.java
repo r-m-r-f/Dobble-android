@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.SocketException;
 
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.HandClearedPacket;
@@ -22,7 +23,7 @@ public class ServerGameSocketReader extends Thread {
     private Handler uiHandler;
     private SocketWrapper readerSocket;
 
-    private Packet packet;
+    private Packet packet = null;
 
     private boolean isRunning;
 
@@ -41,9 +42,14 @@ public class ServerGameSocketReader extends Thread {
         while (isRunning && !interrupted()) {
             try {
                 String response = in.readLine();
-                packet = PacketParser.getPacketFromString(response);
+                if (response != null) {
+                    packet = PacketParser.getPacketFromString(response);
+                }
 
-                Class packetClass = packet.getClass();
+                Class packetClass = null;
+                if (packet != null) {
+                    packetClass = packet.getClass();
+                }
                 Log.d("server listener", "got class" + packetClass.getName());
 
                 if(packetClass == SelectedPicturePacket.class) {
@@ -85,14 +91,18 @@ public class ServerGameSocketReader extends Thread {
 
                     uiHandler.sendMessage(message);
                 }
+            } catch (SocketException e) {
+                isRunning = false;
             } catch (IOException e) {
                 isRunning = false;
             }
         }
+        Log.d("server socket reader", "thread quits");
     }
 
     public void quit() {
         if (isAlive())
             interrupt();
+        isRunning = false;
     }
 }

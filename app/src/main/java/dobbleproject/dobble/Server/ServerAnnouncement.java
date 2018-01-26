@@ -51,7 +51,6 @@ public class ServerAnnouncement extends Thread {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 // TODO: Move isRunning to quit()
-                //Thread.currentThread().interrupt();
                 isRunning = false;
             }
         }

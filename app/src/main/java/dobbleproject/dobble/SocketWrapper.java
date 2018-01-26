@@ -57,15 +57,17 @@ public class SocketWrapper {
     }
 
     public synchronized void close() throws IOException {
-        if(writer != null) {
-            writer.close();
-        }
+//        if(writer != null) {
+//            writer.close();
+//        }
+//
+//        if(reader != null) {
+//            reader.close();
+//        }
 
-        if(reader != null) {
-            reader.close();
+        if(!socket.isClosed()) {
+            socket.close();
         }
-
-        socket.close();
     }
 
 }

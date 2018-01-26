@@ -63,6 +63,7 @@ public class PlayerServerDiscovery extends Thread {
                 Log.d("PlayerServerDiscovery", "closed socket");
             }
         }
+        Log.d("server discovery", "thread quits!");
     }
 
     public void quit() {

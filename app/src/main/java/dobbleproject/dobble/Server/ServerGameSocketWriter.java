@@ -9,6 +9,8 @@ import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.WeakHashMap;
 
 import dobbleproject.dobble.MessageType;
 import dobbleproject.dobble.Packet.ConfirmSelectionPacket;
@@ -91,8 +93,12 @@ public class ServerGameSocketWriter {
     }
 
     public void quit() {
+        Boolean result = null;
+        thread.interrupt();
         if (thread.isAlive())
-            thread.quitSafely();
+            result = thread.quit();
+
+        Log.d("server socket writer", "thread quit: " + Boolean.toString(result));
     }
 
 }
