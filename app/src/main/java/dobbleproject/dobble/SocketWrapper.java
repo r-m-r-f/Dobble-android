@@ -52,19 +52,15 @@ public class SocketWrapper {
         socket.connect(address, timeout);
     }
 
+    public synchronized boolean isClosed() {
+        return socket.isClosed();
+    }
+
     public synchronized InetAddress getInetAddress() {
         return socket.getInetAddress();
     }
 
     public synchronized void close() throws IOException {
-//        if(writer != null) {
-//            writer.close();
-//        }
-//
-//        if(reader != null) {
-//            reader.close();
-//        }
-
         if(!socket.isClosed()) {
             socket.close();
         }

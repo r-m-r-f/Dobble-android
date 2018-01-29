@@ -13,8 +13,6 @@ public class PlayerActivity extends AppCompatActivity {
     Button joinGame;
     EditText playerNameBox;
 
-    Context mContext;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,9 +20,6 @@ public class PlayerActivity extends AppCompatActivity {
 
         joinGame = findViewById(R.id.joinButton);
         playerNameBox = findViewById(R.id.playerNameBox);
-
-        // Set context
-        mContext = this.getApplicationContext();
 
         joinGame.setOnClickListener(new View.OnClickListener() {
             @Override

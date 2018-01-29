@@ -162,9 +162,9 @@ public class ServerSelectionActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
-            playerServerDiscovery.quit();
-        }
+//        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
+//            playerServerDiscovery.quit();
+//        }
 
         stopThreads();
     }

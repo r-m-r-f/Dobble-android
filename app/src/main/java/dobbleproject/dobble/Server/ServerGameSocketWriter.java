@@ -62,16 +62,20 @@ public class ServerGameSocketWriter {
             }
 
             try {
-                if(packet != null) {
+                if(packet != null && socket != null && !socket.isClosed()) {
                     Log.d("in server writer", "trying to write " + packet.toString());
                     out.write(packet.toString());
                     out.flush();
+                    return true;
+                } else {
+//                    return false;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+//                return false;
             }
 
-            return true;
+            return false;
         }
     };
 
@@ -92,9 +96,13 @@ public class ServerGameSocketWriter {
         mHandler = new Handler(thread.getLooper(), callback);
     }
 
-    public void quit() {
+    public void quit() throws IOException {
         Boolean result = null;
+        if (out != null) {
+            out.flush();
+        }
         thread.interrupt();
+        mHandler.removeCallbacks(thread);
         if (thread.isAlive())
             result = thread.quit();
 

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -19,7 +20,8 @@ import dobbleproject.dobble.Server.Player;
 import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerRegisterRequest extends Thread {
-    private Handler uiHandler;
+    //private Handler uiHandler;
+    private final WeakReference<Handler> uiHandler;
     private boolean isRunning = true;
 
 
@@ -36,7 +38,7 @@ public class PlayerRegisterRequest extends Thread {
         this.playerIp = playerIp;
         this.serverIp = serverIp;
         this.serverPort = serverPort;
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<>(uiHandler);
     }
 
     @Override
@@ -68,7 +70,9 @@ public class PlayerRegisterRequest extends Thread {
             e.printStackTrace();
         }
         finally {
-            uiHandler.sendMessage(message);
+            if(uiHandler.get() != null) {
+                uiHandler.get().sendMessage(message);
+            }
         }
     }
 

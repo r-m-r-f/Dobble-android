@@ -25,7 +25,7 @@ import dobbleproject.dobble.Server.ServerSocketSingleton;
 public class ServerActivity extends AppCompatActivity {
     Button startButton;
     TextView textView;
-    Handler mHandler = new Handler();
+    Handler mHandler;
 
     boolean isJobRunning = false;
 
@@ -37,7 +37,7 @@ public class ServerActivity extends AppCompatActivity {
     // Number of players
     int numberOfPlayers;
 
-    Context mContext;
+    private final Context mContext = this;
 
     String broadcastAddress;
     String serverIp;
@@ -61,7 +61,7 @@ public class ServerActivity extends AppCompatActivity {
         textView = findViewById(R.id.textView4);
 
         // Set context
-        mContext = this.getApplicationContext();
+//        mContext = this.getApplicationContext();
 
         try {
             wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);

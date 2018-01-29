@@ -6,6 +6,7 @@ import android.os.Message;
 import android.util.Log;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -19,11 +20,12 @@ import dobbleproject.dobble.Server.ServerInfo;
 
 public class PlayerServerDiscovery extends Thread {
     private DatagramSocket listenerSocket;
-    Handler uiHandler;
+//    Handler uiHandler;
+    WeakReference<Handler> uiHandler;
     private boolean isRunning = true;
 
     public PlayerServerDiscovery(Handler uiHandler) {
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<>(uiHandler);
     }
 
     @Override
@@ -56,7 +58,10 @@ public class PlayerServerDiscovery extends Thread {
                     msg.what = MessageType.SERVER_DISCOVERED;
                     msg.setData(bundle);
 
-                    uiHandler.sendMessage(msg);
+                    // TODO: Probably unsafe
+                    if(uiHandler.get() != null) {
+                        uiHandler.get().sendMessage(msg);
+                    }
                 }
 
             } catch (IOException e) {

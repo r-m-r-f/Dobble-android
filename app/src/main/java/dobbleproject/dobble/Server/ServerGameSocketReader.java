@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.SocketException;
 
 import dobbleproject.dobble.MessageType;
@@ -20,7 +21,7 @@ import dobbleproject.dobble.SocketWrapper;
 public class ServerGameSocketReader extends Thread {
     private BufferedReader in;
     private int playerNumber;
-    private Handler uiHandler;
+    private WeakReference<Handler> uiHandler;
     private SocketWrapper readerSocket;
 
     private Packet packet = null;
@@ -29,7 +30,7 @@ public class ServerGameSocketReader extends Thread {
 
     public ServerGameSocketReader(int playerNumber, Handler uiHandler) {
         this.playerNumber = playerNumber;
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<Handler>(uiHandler);
     }
     @Override
     public void run() {
@@ -37,13 +38,18 @@ public class ServerGameSocketReader extends Thread {
         in = readerSocket.getReader();
 
         isRunning = true;
-        Log.d("server listener", "startted listening");
+        Log.d("server listener", "started listening");
 
+        Message message = null;
+        String response = null;
         while (isRunning && !interrupted()) {
             try {
-                String response = in.readLine();
+                if (!readerSocket.isClosed()) {
+                    response = in.readLine();
+                }
                 if (response != null) {
                     packet = PacketParser.getPacketFromString(response);
+                    response = null;
                 }
 
                 Class packetClass = null;
@@ -63,21 +69,17 @@ public class ServerGameSocketReader extends Thread {
                     bundle.putInt("card", cardIndex);
                     bundle.putInt("picture", pictureIndex);
 
-                    Message message = new Message();
+                    message = new Message();
                     message.what = MessageType.SELECTED_PICTURE;
                     message.setData(bundle);
-
-                    uiHandler.sendMessage(message);
                 }
                 else if(packetClass == HandClearedPacket.class) {
                     Bundle bundle = new Bundle();
                     bundle.putInt("number", playerNumber);
 
-                    Message message = new Message();
+                    message = new Message();
                     message.what = MessageType.HAND_CLEARED;
                     message.setData(bundle);
-
-                    uiHandler.sendMessage(message);
                 }
                 else if (packetClass == PlayerReadyPacket.class) {
                     Bundle bundle = new Bundle();
@@ -85,22 +87,36 @@ public class ServerGameSocketReader extends Thread {
 
                     Log.d("server socket reader", "index" + Integer.toString(((PlayerReadyPacket) packet).getPlayerNumber()));
 
-                    Message message = new Message();
+                    message = new Message();
                     message.what = MessageType.PLAYER_READY;
                     message.setData(bundle);
-
-                    uiHandler.sendMessage(message);
                 }
+
+                if (message != null) {
+                    // Get handler
+                    Handler handler = uiHandler.get();
+                    if (handler != null) {
+                        handler.sendMessage(message);
+                    }
+                }
+
             } catch (SocketException e) {
                 isRunning = false;
+                Log.d("server socket reader", "exception, thread hard quits");
+                return;
             } catch (IOException e) {
                 isRunning = false;
+                Log.d("server socket reader", "exception, thread hard quits");
+                return;
             }
         }
         Log.d("server socket reader", "thread quits");
     }
 
-    public void quit() {
+    public void quit() throws IOException {
+        if (in != null) {
+            in.close();
+        }
         if (isAlive())
             interrupt();
         isRunning = false;

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.SocketException;
 import java.util.ArrayList;
 
@@ -25,7 +26,9 @@ import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerSocketReader extends Thread {
     private BufferedReader in;
-    private Handler uiHandler;
+    private final WeakReference<Handler> uiHandler;
+
+    // TODO: Consider using WeakReference
     private SocketWrapper playerSocket;
 
     private Packet packet = null;
@@ -33,7 +36,7 @@ public class PlayerSocketReader extends Thread {
     private boolean isRunning = true;
 
     public PlayerSocketReader(Handler uiHandler) {
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<>(uiHandler);
 
         playerSocket = PlayerReaderSocketHandler.getSocket();
     }
@@ -43,6 +46,7 @@ public class PlayerSocketReader extends Thread {
         try {
             in = playerSocket.getReader();
 
+            Message msg = null;
             while (isRunning && !interrupted()) {
                 String response = in.readLine();
                 if (response != null) {
@@ -63,15 +67,15 @@ public class PlayerSocketReader extends Thread {
                     bundle.putStringArrayList("names", playersNames);
                     bundle.putInt("playerNumber", playerNumber);
 
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.GAME_SETUP;
                     msg.setData(bundle);
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
                 }
                 else if (packetClass == StartGamePacket.class){
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.NEW_GAME;
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
 
                 }
                 else if(packetClass == NewHandPacket.class) {
@@ -80,10 +84,10 @@ public class PlayerSocketReader extends Thread {
                     Bundle bundle = new Bundle();
                     bundle.putIntegerArrayList("hand", handCardsIndexes);
 
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.HAND_DELIVERED;
                     msg.setData(bundle);
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
                 }
                 else if(packetClass == NewTurnPacket.class) {
                     Card card = ((NewTurnPacket) packet).getCard();
@@ -91,30 +95,35 @@ public class PlayerSocketReader extends Thread {
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("card", card);
 
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.NEW_TURN;
                     msg.setData(bundle);
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
                 }
                 else if (packetClass == ConfirmSelectionPacket.class) {
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.CONFIRMED_SELECTION;
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
                 }
                 else if(packetClass == WrongSelectionPacket.class) {
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.WRONG_SELECTION;
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
                 }
                 else if (packetClass == EndGamePacket.class) {
-                    Message msg = new Message();
+                    msg = new Message();
                     msg.what = MessageType.END_GAME;
 
                     Bundle b = new Bundle();
                     b.putInt("winner", ((EndGamePacket) packet).getWinner());
 
                     msg.setData(b);
-                    uiHandler.sendMessage(msg);
+//                    uiHandler.sendMessage(msg);
+                }
+
+                if(msg != null && uiHandler.get() !=null) {
+                    uiHandler.get().sendMessage(msg);
+                    msg = null;
                 }
 
                 // TODO: Handle game logic
@@ -122,7 +131,9 @@ public class PlayerSocketReader extends Thread {
             }
         } catch (SocketException e) {
             isRunning = false;
+            Log.d("player socket reader", "socket exception");
         } catch (IOException e) {
+            isRunning = false;
             e.printStackTrace();
         }
 
@@ -130,9 +141,15 @@ public class PlayerSocketReader extends Thread {
     }
 
     public void quit() {
+        if(in != null) {
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         if (isAlive())
             interrupt();
         isRunning = false;
-
     }
 }

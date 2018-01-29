@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,20 +40,19 @@ public class ServerGameActivity extends AppCompatActivity {
 
     int numberOfPlayers;
     Handler mHandler;
-    Context mContext = this;
+    private final Context mContext = this;
 
     // Threads
     ArrayList<ServerGameSocketReader> socketReaders = new ArrayList<>();
     ArrayList<ServerGameSocketWriter> socketWriters = new ArrayList<>();
 
-    ArrayList<Handler> writerHandlers = new ArrayList<>();
+    ArrayList<WeakReference<Handler>> writerHandlers = new ArrayList<>();
 
     ArrayList<String> playersNames;
 
     // Players that started their game activities
     ArrayList<Boolean> playersReady;
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +85,6 @@ public class ServerGameActivity extends AppCompatActivity {
 
                         Log.d("server", "matches: " + checkMatching(selectedPicture));
 
-                        Handler writerHandler = socketWriters.get(number).getHandler();
                         Message message = new Message();
 
                         if (checkMatching(selectedPicture)) {
@@ -95,7 +94,11 @@ public class ServerGameActivity extends AppCompatActivity {
                         } else {
                             message.what = MessageType.WRONG_SELECTION;
                         }
-                        writerHandler.sendMessage(message);
+                        Handler writerHandler = writerHandlers.get(number).get();
+                        if(writerHandler != null) {
+                            writerHandler.sendMessage(message);
+
+                        }
                     }
                         break;
                     case MessageType.HAND_CLEARED: {
@@ -109,8 +112,11 @@ public class ServerGameActivity extends AppCompatActivity {
 
                         message.setData(b);
 
-                        for (Handler wHandler: writerHandlers) {
-                            wHandler.sendMessage(message);
+                        for (WeakReference<Handler> handler: writerHandlers) {
+                            Handler wHandler = handler.get();
+                            if(wHandler != null) {
+                                wHandler.sendMessage(message);
+                            }
                         }
 
                         String winnerName = playersNames.get(winner);
@@ -131,12 +137,13 @@ public class ServerGameActivity extends AppCompatActivity {
                         if(allReady) {
                             // Start a new game
                             for(int i = 0; i < numberOfPlayers; i++) {
-                                Handler wHandler = socketWriters.get(i).getHandler();
-
                                 Message message = new Message();
                                 message.what = MessageType.NEW_GAME;
 
-                                wHandler.sendMessage(message);
+                                Handler wHandler = writerHandlers.get(i).get();
+                                if(wHandler != null) {
+                                    wHandler.sendMessage(message);
+                                }
                             }
                         }
                         break;
@@ -154,14 +161,12 @@ public class ServerGameActivity extends AppCompatActivity {
             socketWriters.add(writer);
             writer.start();
 
-            writerHandlers.add(writer.getHandler());
+            writerHandlers.add(new WeakReference<>(writer.getHandler()));
         }
 
         // Send names
         playersNames = ServerPlayersList.getPlayersNames();
         for(int i = 0; i < numberOfPlayers; i++) {
-            Handler wHandler = socketWriters.get(i).getHandler();
-
             Message message = new Message();
             message.what = MessageType.GAME_SETUP;
 
@@ -170,7 +175,10 @@ public class ServerGameActivity extends AppCompatActivity {
             b.putInt("number", i);
 
             message.setData(b);
-            wHandler.sendMessage(message);
+            Handler wHandler = writerHandlers.get(i).get();
+            if(wHandler != null) {
+                wHandler.sendMessage(message);
+            }
         }
     }
 
@@ -200,8 +208,6 @@ public class ServerGameActivity extends AppCompatActivity {
 
         // Send hands
         for(int i = 0; i < numberOfPlayers; i++) {
-            Handler wHandler = socketWriters.get(i).getHandler();
-
             Message message = new Message();
             message.what = MessageType.NEW_HAND;
 
@@ -209,8 +215,11 @@ public class ServerGameActivity extends AppCompatActivity {
             b.putIntegerArrayList("hand", playersHands.get(i));
 
             message.setData(b);
-            wHandler.sendMessage(message);
-        }
+
+            Handler wHandler = writerHandlers.get(i).get();
+            if(wHandler != null) {
+                wHandler.sendMessage(message);
+            }        }
     }
 
     @Override
@@ -220,13 +229,13 @@ public class ServerGameActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         try {
             cleanup();
         } catch (IOException e) {
             Log.d("server activity", "exception in onDestroy");
             e.printStackTrace();
         }
+        super.onDestroy();
     }
 
 

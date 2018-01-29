@@ -50,19 +50,21 @@ public class PlayerSocketWriter {
 
             try {
                 // TODO: Refactor
-                Log.d("player socket writer", packet.toString());
-                out.write(packet.toString());
-                out.flush();
-
+                if (packet != null && socket != null && !socket.isClosed()) {
+                    Log.d("player socket writer", packet.toString());
+                    out.write(packet.toString());
+                    out.flush();
+                } else {
+                    return false;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
-
             return true;
         }
     };
 
-    @SuppressLint("HandlerLeak")
     public PlayerSocketWriter(SocketWrapper socket, int playerNumber) {
         this.socket = socket;
         this.playerNumber = playerNumber;
@@ -83,10 +85,18 @@ public class PlayerSocketWriter {
 
     public void quit() {
         Boolean result = null;
+        if (out != null) {
+            try {
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         thread.interrupt();
-        if (thread.isAlive())
-             result = thread.quitSafely();
-
+        if (thread.isAlive()) {
+            mHandler.removeCallbacks(thread);
+            result = thread.quitSafely();
+        }
         Log.d("player socket writer", "thread quit: " + Boolean.toString(result));
     }
 

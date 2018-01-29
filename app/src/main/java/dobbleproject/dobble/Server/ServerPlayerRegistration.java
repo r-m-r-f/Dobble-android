@@ -7,6 +7,7 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,7 +25,7 @@ import dobbleproject.dobble.SocketWrapper;
 public class ServerPlayerRegistration extends Thread {
     private DatagramSocket listenerSocket = null;
 
-    private Handler uiHandler;
+    private WeakReference<Handler> uiHandler;
 
     String serverName;
     String serverIp;
@@ -38,7 +39,7 @@ public class ServerPlayerRegistration extends Thread {
         this.serverName = serverName;
         this.serverIp = serverIp;
         this.numberOfPlayers = numberOfPlayers;
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<Handler>(uiHandler);
     }
 
 
@@ -49,20 +50,6 @@ public class ServerPlayerRegistration extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //Set server socket
-//        ServerSocket ss = null;
-//        try {
-//            ss = ServerSocketSingleton.getServerSocket();
-//            if(ss != null) {
-//                ss.close();
-//            }
-//            ss = new ServerSocket(0, numberOfPlayers);
-//            ServerSocketSingleton.setServerSocket(ss);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            throw new RuntimeException();
-//        }
 
         ServerSocket ss = ServerSocketSingleton.getServerSocket();
         if(ss == null)
@@ -92,7 +79,13 @@ public class ServerPlayerRegistration extends Thread {
                             ((RegisterRequestPacket) packet).getPlayerIp(), -1), readerSocket, new SocketWrapper(writerSocket)));
                     registered++;
                 }
-                uiHandler.sendMessage(MessageHelper.createDebugMessage("registered " + readerSocket.getInetAddress()));
+
+                {
+                    Handler handler = uiHandler.get();
+                    if (handler != null) {
+                        handler.sendMessage(MessageHelper.createDebugMessage("registered " + readerSocket.getInetAddress()));
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -101,7 +94,13 @@ public class ServerPlayerRegistration extends Thread {
         Message message = new Message();
         message.what = MessageType.PLAYERS_LIST_READY;
 
-        uiHandler.sendMessage(message);
+        {
+            Handler handler = uiHandler.get();
+            if (handler != null) {
+                handler.sendMessage(message);
+            }
+        }
+//        uiHandler.sendMessage(message);
     }
 
     public void quit() {
@@ -111,14 +110,13 @@ public class ServerPlayerRegistration extends Thread {
             listenerSocket.close();
         }
 
-//        if(ServerSocketSingleton.getServerSocket() != null) {
-//            try {
-//                ServerSocketSingleton.getServerSocket().close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        uiHandler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
+        {
+            Handler handler = uiHandler.get();
+            if (handler != null) {
+                handler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
+            }
+        }
+//        uiHandler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
     }
 
 }
