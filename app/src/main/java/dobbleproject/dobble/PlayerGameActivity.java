@@ -57,13 +57,16 @@ public class PlayerGameActivity extends AppCompatActivity {
     // blocks picture selection when a player exchanges information with the server
     boolean isClickable = false;
 
-    private PlayerGameHandler mHandler;
+    private Handler mHandler;
     private WeakReference<Handler> writerHandler;
     private final Context mContext = this;
 
     // Threads
     PlayerSocketReader socketReader;
     PlayerSocketWriter socketWriter;
+
+    // Play again flag
+    PlayAgainFlag playAgain = new PlayAgainFlag();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +83,18 @@ public class PlayerGameActivity extends AppCompatActivity {
         setCardImages();
         setListeners();
 
-        mHandler = new PlayerGameHandler(this);
+        // Set playAgain listener
+        playAgain.setListener(new PlayAgainFlag.ChangeListener() {
+            @Override
+            public void onChange() {
+                Log.d("player game activity","in play again");
+                Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        mHandler = new Handler(callback);
 
 //        mHandler = new Handler() {
 //            @Override
@@ -276,10 +290,7 @@ public class PlayerGameActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
-                        //finish();
-                        finish();
-                        Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
-                        startActivity(intent);
+                        playAgain.setFlag(true);
                     }
                 })
                 .setNegativeButton("No", null)
@@ -287,7 +298,6 @@ public class PlayerGameActivity extends AppCompatActivity {
     }
 
     public void cleanup() throws IOException {
-//        mHandler.getLooper().quit();
         // Stop threads
         if(socketReader != null) {
             socketReader.quit();
@@ -304,103 +314,202 @@ public class PlayerGameActivity extends AppCompatActivity {
         Log.d("player cleanup", "reader socket closed");
         PlayerWriterSocketHandler.close();
         Log.d("player cleanup", "writer socket closed");
+
+//        mHandler.removeCallbacksAndMessages(null);
+
     }
 
-    static class PlayerGameHandler extends Handler {
-        private WeakReference<PlayerGameActivity> ref;
+//    static class PlayerGameHandler extends Handler {
+//        private WeakReference<PlayerGameActivity> ref;
+//
+//        public PlayerGameHandler(PlayerGameActivity ref) {
+//            this.ref = new WeakReference<>(ref);
+//        }
+//        @Override
+//        public void handleMessage(Message msg) {
+//            super.handleMessage(msg);
+//
+//            final PlayerGameActivity a = ref.get();
+//            if (ref == null) {
+//                return;
+//            }
+//            Message message;
+//                Bundle b;
+//                switch (msg.what){
+//                    case MessageType.GAME_SETUP:
+//                        a.playerNames = msg.getData().getStringArrayList("names");
+//                        a.playerNumber = msg.getData().getInt("playerNumber");
+//
+//                        StringBuilder sb = new StringBuilder();
+//                        for(int i = 0; i < a.playerNames.size(); i++) {
+//                            sb.append(a.playerNames.get(i));
+//                            sb.append(" ");
+//                        }
+//
+//                        a.playersNamesTextView.setText(sb.toString());
+//                        break;
+//                    case MessageType.HAND_DELIVERED:
+//                        a.handCardsIndexes = msg.getData().getIntegerArrayList("hand");
+//                        Toast.makeText(a.mContext, "got hand: size " + a.handCardsIndexes.size(), Toast.LENGTH_LONG).show();
+//                        a.currentHandIndex = 0;
+//
+//                        message = new Message();
+//                        message.what = MessageType.PLAYER_READY;
+//
+//                        b = new Bundle();
+//                        b.putInt("number", a.playerNumber);
+//
+//                        Log.d("client player ready", Integer.toString(a.playerNumber));
+//                        message.setData(b);
+//                        if(a.writerHandler.get() != null) {
+//                            a.writerHandler.get().sendMessage(message);
+//                        }
+//                        break;
+//                    case MessageType.NEW_GAME:
+//                        a.updateCardsLeft();
+//                        a.displayCard();
+//                        a.isClickable = true;
+//                        Toast.makeText(a.mContext, "New game!", Toast.LENGTH_SHORT).show();
+//                        break;
+//                    case MessageType.CONFIRMED_SELECTION:
+//                        a.currentHandIndex++;
+//                        a.cardBackground.setBackgroundColor(Color.LTGRAY);
+//
+//                        // Check if any cards left
+//                        if(a.currentHandIndex < a.handCardsIndexes.size()) {
+//                            a.displayCard();
+//                            a.updateCardsLeft();
+//                            a.isClickable = true;
+//                        } else {
+//                            message = new Message();
+//                            message.what = MessageType.HAND_CLEARED;
+//                            if(a.writerHandler.get() != null) {
+//                                a.writerHandler.get().sendMessage(message);
+//                            }                        }
+//                        break;
+//                    case MessageType.WRONG_SELECTION:
+//                        Toast.makeText(a.mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
+//
+//                        // Block ui
+//                        a.isClickable = false;
+//                        a.cardBackground.setBackgroundColor(Color.RED);
+//                        new CountDownTimer(1000, 500){
+//                            @Override
+//                            public void onTick(long l) {}
+//
+//                            @Override
+//                            public void onFinish() {
+//                                a.isClickable = true;
+//                                a.cardBackground.setBackgroundColor(Color.LTGRAY);
+//                            }
+//                        }.start();
+//                        break;
+//                    case MessageType.END_GAME: {
+//                        int winner = msg.getData().getInt("winner");
+//                        String winnerName = winner == a.playerNumber ? "You": a.playerNames.get(winner);
+//                        a.promptEndGame(winnerName);
+//                        return;
+//                    }
+//            }
+//
+//        }
+//    }
 
-        public PlayerGameHandler(PlayerGameActivity ref) {
-            this.ref = new WeakReference<>(ref);
-        }
+    Handler.Callback callback = new Handler.Callback() {
         @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
+        public boolean handleMessage(Message msg) {
+            Log.d("player handler: ", "got " + Integer.toString(msg.what));
 
-            final PlayerGameActivity a = ref.get();
-            if (ref == null) {
-                return;
-            }
             Message message;
-            Bundle b;
-            switch (msg.what){
-                case MessageType.GAME_SETUP:
-                    a.playerNames = msg.getData().getStringArrayList("names");
-                    a.playerNumber = msg.getData().getInt("playerNumber");
+                Bundle b;
+                switch (msg.what){
+                    case MessageType.GAME_SETUP:
+                        playerNames = msg.getData().getStringArrayList("names");
+                        playerNumber = msg.getData().getInt("playerNumber");
 
-                    StringBuilder sb = new StringBuilder();
-                    for(int i = 0; i < a.playerNames.size(); i++) {
-                        sb.append(a.playerNames.get(i));
-                        sb.append(" ");
-                    }
-
-                    a.playersNamesTextView.setText(sb.toString());
-                    break;
-                case MessageType.HAND_DELIVERED:
-                    a.handCardsIndexes = msg.getData().getIntegerArrayList("hand");
-                    Toast.makeText(a.mContext, "got hand: size " + a.handCardsIndexes.size(), Toast.LENGTH_LONG).show();
-                    a.currentHandIndex = 0;
-
-                    message = new Message();
-                    message.what = MessageType.PLAYER_READY;
-
-                    b = new Bundle();
-                    b.putInt("number", a.playerNumber);
-
-                    Log.d("client player ready", Integer.toString(a.playerNumber));
-                    message.setData(b);
-                    if(a.writerHandler.get() != null) {
-                        a.writerHandler.get().sendMessage(message);
-                    }
-                    break;
-                case MessageType.NEW_GAME:
-                    a.updateCardsLeft();
-                    a.displayCard();
-                    a.isClickable = true;
-                    Toast.makeText(a.mContext, "New game!", Toast.LENGTH_SHORT).show();
-                    break;
-                case MessageType.CONFIRMED_SELECTION:
-                    a.currentHandIndex++;
-                    a.cardBackground.setBackgroundColor(Color.LTGRAY);
-
-                    // Check if any cards left
-                    if(a.currentHandIndex < a.handCardsIndexes.size()) {
-                        a.displayCard();
-                        a.updateCardsLeft();
-                        a.isClickable = true;
-                    } else {
-                        message = new Message();
-                        message.what = MessageType.HAND_CLEARED;
-                        if(a.writerHandler.get() != null) {
-                            a.writerHandler.get().sendMessage(message);
-                        }                        }
-                    break;
-                case MessageType.WRONG_SELECTION:
-                    Toast.makeText(a.mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
-
-                    // Block ui
-                    a.isClickable = false;
-                    a.cardBackground.setBackgroundColor(Color.RED);
-                    new CountDownTimer(1000, 500){
-                        @Override
-                        public void onTick(long l) {}
-
-                        @Override
-                        public void onFinish() {
-                            a.isClickable = true;
-                            a.cardBackground.setBackgroundColor(Color.LTGRAY);
+                        StringBuilder sb = new StringBuilder();
+                        for(int i = 0; i < playerNames.size(); i++) {
+                            sb.append(playerNames.get(i));
+                            sb.append(" ");
                         }
-                    }.start();
-                    break;
-                case MessageType.END_GAME: {
-                    int winner = msg.getData().getInt("winner");
-                    String winnerName = winner == a.playerNumber ? "You": a.playerNames.get(winner);
-                    a.promptEndGame(winnerName);
-                    return;
+
+                        playersNamesTextView.setText(sb.toString());
+                        return true;
+//                    break;
+                    case MessageType.HAND_DELIVERED:
+                        handCardsIndexes = msg.getData().getIntegerArrayList("hand");
+                        Toast.makeText(mContext, "got hand: size " + handCardsIndexes.size(), Toast.LENGTH_LONG).show();
+                        currentHandIndex = 0;
+
+                        message = new Message();
+                        message.what = MessageType.PLAYER_READY;
+
+                        b = new Bundle();
+                        b.putInt("number", playerNumber);
+
+                        Log.d("client player ready", Integer.toString(playerNumber));
+                        message.setData(b);
+                        if(writerHandler.get() != null) {
+                            writerHandler.get().sendMessage(message);
+                            return true;
+                        }
+                        break;
+                    case MessageType.NEW_GAME:
+                        updateCardsLeft();
+                        displayCard();
+                        isClickable = true;
+                        Toast.makeText(mContext, "New game!", Toast.LENGTH_SHORT).show();
+                        return true;
+//                    break;
+                    case MessageType.CONFIRMED_SELECTION:
+                        currentHandIndex++;
+                        cardBackground.setBackgroundColor(Color.LTGRAY);
+
+                        // Check if any cards left
+                        if(currentHandIndex < handCardsIndexes.size()) {
+                            displayCard();
+                            updateCardsLeft();
+                            isClickable = true;
+                        } else {
+                            message = new Message();
+                            message.what = MessageType.HAND_CLEARED;
+                            if(writerHandler.get() != null) {
+                                writerHandler.get().sendMessage(message);
+                                return true;
+                            }                        }
+                        break;
+                    case MessageType.WRONG_SELECTION:
+                        Toast.makeText(mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
+
+                        // Block ui
+                        isClickable = false;
+                        cardBackground.setBackgroundColor(Color.RED);
+                        new CountDownTimer(1000, 500){
+                            @Override
+                            public void onTick(long l) {}
+
+                            @Override
+                            public void onFinish() {
+                                isClickable = true;
+                                cardBackground.setBackgroundColor(Color.LTGRAY);
+                            }
+                        }.start();
+                        return true;
+//                    break;
+                    case MessageType.END_GAME: {
+                        int winner = msg.getData().getInt("winner");
+                        String winnerName = winner == playerNumber ? "You": playerNames.get(winner);
+                        promptEndGame(winnerName);
+                        Log.d("player game activity","after dialog");
+
+//                        if (playAgain) {
+//
+//                        }
+                        return true;
+                    }
                 }
-            }
-
+            return false;
         }
-    }
-
+    };
 
 }

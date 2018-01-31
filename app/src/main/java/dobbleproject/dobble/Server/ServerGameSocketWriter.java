@@ -102,7 +102,7 @@ public class ServerGameSocketWriter {
             out.flush();
         }
         thread.interrupt();
-        mHandler.removeCallbacks(thread);
+//        mHandler.removeCallbacksAndMessages(null);
         if (thread.isAlive())
             result = thread.quit();
 

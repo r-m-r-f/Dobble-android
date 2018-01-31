@@ -52,14 +52,14 @@ public class ServerSelectionActivity extends AppCompatActivity {
     ArrayList<ServerInfo> serversList = new ArrayList<>();
     ListView serverList = null;
 
+    ArrayAdapter<ServerInfo> adapter = null;
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_selection);
 
-        final ArrayAdapter<ServerInfo> adapter = new ServerItemAdapter(this, R.layout.serverlist_item_layout, serversList);
+        adapter = new ServerItemAdapter(this, R.layout.serverlist_item_layout, serversList);
 
         serverList = findViewById(R.id.serverListView);
         serverList.setAdapter(adapter);
@@ -99,47 +99,49 @@ public class ServerSelectionActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case MessageType.SERVER_DISCOVERED:
-                        ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
-                        Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
-                        if(knownServers.get(serverInfo.getIp()) == null) {
-                            knownServers.put(serverInfo.getIp(), serverInfo.getName());
-                            serversList.add(serverInfo);
-                        }
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case MessageType.REGISTER_REQUEST_EXPIRED:
-                        Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);
+        mHandler = new Handler(callback);
 
-                        // Restart server discovery, probably unsafe
-                        if(playerServerDiscovery != null) {
-                            playerServerDiscovery.quit();
-                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
-                        }
-                        break;
-                    case MessageType.REGISTER_REQUEST_ERROR:
-                        Toast.makeText(getApplicationContext(), "Unknown error", Toast.LENGTH_LONG);
-
-                        // Restart server discovery, probably unsafe
-                        if(playerServerDiscovery != null) {
-                            playerServerDiscovery.quit();
-                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
-                        }
-                        break;
-                    case MessageType.PLAYER_REGISTERED:
-                        Log.d("player registered", ServerSelectionActivity.this.toString());
-                        finish();
-                        //Start a new activity
-                        Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
-                        startActivity(intent);
-                        break;
-                }
-            }
-        };
+//        mHandler = new Handler() {
+//            @Override
+//            public void handleMessage(Message msg) {
+//                switch (msg.what) {
+//                    case MessageType.SERVER_DISCOVERED:
+//                        ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
+//                        Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
+//                        if(knownServers.get(serverInfo.getIp()) == null) {
+//                            knownServers.put(serverInfo.getIp(), serverInfo.getName());
+//                            serversList.add(serverInfo);
+//                        }
+//                        adapter.notifyDataSetChanged();
+//                        break;
+//                    case MessageType.REGISTER_REQUEST_EXPIRED:
+//                        Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);
+//
+//                        // Restart server discovery, probably unsafe
+//                        if(playerServerDiscovery != null) {
+//                            playerServerDiscovery.quit();
+//                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
+//                        }
+//                        break;
+//                    case MessageType.REGISTER_REQUEST_ERROR:
+//                        Toast.makeText(getApplicationContext(), "Unknown error", Toast.LENGTH_LONG);
+//
+//                        // Restart server discovery, probably unsafe
+//                        if(playerServerDiscovery != null) {
+//                            playerServerDiscovery.quit();
+//                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
+//                        }
+//                        break;
+//                    case MessageType.PLAYER_REGISTERED:
+//                        Log.d("player registered", ServerSelectionActivity.this.toString());
+//                        finish();
+//                        //Start a new activity
+//                        Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
+//                        startActivity(intent);
+//                        break;
+//                }
+//            }
+//        };
     }
 
     @Override
@@ -161,12 +163,8 @@ public class ServerSelectionActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-//        if(playerServerDiscovery != null && playerServerDiscovery.isAlive()) {
-//            playerServerDiscovery.quit();
-//        }
-
         stopThreads();
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     private synchronized void stopThreads() {
@@ -178,6 +176,49 @@ public class ServerSelectionActivity extends AppCompatActivity {
             registerRequest.quit();
         }
     }
+
+    Handler.Callback callback = new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
+                case MessageType.SERVER_DISCOVERED:
+                    ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
+                    Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
+                    if(knownServers.get(serverInfo.getIp()) == null) {
+                        knownServers.put(serverInfo.getIp(), serverInfo.getName());
+                        serversList.add(serverInfo);
+                    }
+                    adapter.notifyDataSetChanged();
+                    break;
+                case MessageType.REGISTER_REQUEST_EXPIRED:
+                    Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);
+
+                    // Restart server discovery, probably unsafe
+                    if(playerServerDiscovery != null) {
+                        playerServerDiscovery.quit();
+                        playerServerDiscovery = new PlayerServerDiscovery(mHandler);
+                    }
+                    break;
+                case MessageType.REGISTER_REQUEST_ERROR:
+                    Toast.makeText(getApplicationContext(), "Unknown error", Toast.LENGTH_LONG);
+
+                    // Restart server discovery, probably unsafe
+                    if(playerServerDiscovery != null) {
+                        playerServerDiscovery.quit();
+                        playerServerDiscovery = new PlayerServerDiscovery(mHandler);
+                    }
+                    break;
+                case MessageType.PLAYER_REGISTERED:
+                    Log.d("player registered", ServerSelectionActivity.this.toString());
+                    finish();
+                    //Start a new activity
+                    Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
+                    startActivity(intent);
+                    break;
+            }
+            return true;
+        }
+    };
 }
 
 class ServerItemAdapter extends ArrayAdapter<ServerInfo> {

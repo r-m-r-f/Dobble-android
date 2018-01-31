@@ -94,7 +94,7 @@ public class PlayerSocketWriter {
         }
         thread.interrupt();
         if (thread.isAlive()) {
-            mHandler.removeCallbacks(thread);
+//            mHandler.removeCallbacksAndMessages(null);
             result = thread.quitSafely();
         }
         Log.d("player socket writer", "thread quit: " + Boolean.toString(result));

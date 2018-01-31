@@ -53,6 +53,97 @@ public class ServerGameActivity extends AppCompatActivity {
     // Players that started their game activities
     ArrayList<Boolean> playersReady;
 
+    // Play again flag
+    PlayAgainFlag playAgain = new PlayAgainFlag();
+
+    Handler.Callback callback = new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            Log.d("server handler: ", "got " + Integer.toString(msg.what));
+            switch (msg.what) {
+                case MessageType.SELECTED_PICTURE: {
+                    Bundle b = msg.getData();
+
+                    int selectedPicture = b.getInt("picture");
+                    int selectedCard = b.getInt("card");
+                    int number = b.getInt("number");
+
+                    Log.d("server", "matches: " + checkMatching(selectedPicture));
+
+                    Message message = new Message();
+
+                    if (checkMatching(selectedPicture)) {
+                        message.what = MessageType.CONFIRMED_SELECTION;
+                        currentCardIndex = selectedCard;
+                        displayCard();
+                    } else {
+                        message.what = MessageType.WRONG_SELECTION;
+                    }
+                    Handler writerHandler = writerHandlers.get(number).get();
+                    if(writerHandler != null) {
+                        writerHandler.sendMessage(message);
+                        return true;
+                    }
+                }
+                break;
+                case MessageType.HAND_CLEARED: {
+                    int winner = msg.getData().getInt("number");
+
+                    Message message = new Message();
+                    message.what = MessageType.END_GAME;
+
+                    Bundle b = new Bundle();
+                    b.putInt("winner", winner);
+
+                    message.setData(b);
+
+                    for (WeakReference<Handler> handler: writerHandlers) {
+                        try {
+                            Handler wHandler = handler.get();
+                            if(wHandler != null) {
+                                wHandler.sendMessage(message);
+                            }
+                        } catch (IllegalStateException e) {
+
+                        }
+                    }
+
+                    String winnerName = playersNames.get(winner);
+                    promptEndGame(winnerName);
+                    Log.d("server game activity","after dialog");
+                    return true;
+                }
+//                break;
+                case MessageType.PLAYER_READY:
+                    int num = msg.getData().getInt("number");
+                    Log.d("server", "player ready index: " + Integer.toString(num));
+                    Log.d("server", "players ready array len: " + Integer.toString(playersReady.size()));
+                    playersReady.set(num, true);
+
+                    boolean allReady = true;
+                    for (Boolean b : playersReady){
+                        if(!b) allReady = false;
+                    }
+
+                    if(allReady) {
+                        // Start a new game
+                        for(int i = 0; i < numberOfPlayers; i++) {
+                            Message message = new Message();
+                            message.what = MessageType.NEW_GAME;
+
+                            Handler wHandler = writerHandlers.get(i).get();
+                            if(wHandler != null) {
+                                wHandler.sendMessage(message);
+                                return true;
+                            }
+                        }
+                    }
+                    break;
+            }
+            return false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +151,17 @@ public class ServerGameActivity extends AppCompatActivity {
 
         setImagesFromResources();
         setCardImages();
+
+        playAgain.setListener(new PlayAgainFlag.ChangeListener() {
+            @Override
+            public void onChange() {
+                Log.d("server game activity","in play again");
+
+                Intent intent = new Intent(ServerGameActivity.this, ServerSetupActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         numberOfPlayers = getIntent().getExtras().getInt("numberOfPlayers");
 
@@ -72,84 +174,7 @@ public class ServerGameActivity extends AppCompatActivity {
             playersReady.add(false);
         }
 
-        mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case MessageType.SELECTED_PICTURE: {
-                        Bundle b = msg.getData();
-
-                        int selectedPicture = b.getInt("picture");
-                        int selectedCard = b.getInt("card");
-                        int number = b.getInt("number");
-
-                        Log.d("server", "matches: " + checkMatching(selectedPicture));
-
-                        Message message = new Message();
-
-                        if (checkMatching(selectedPicture)) {
-                            message.what = MessageType.CONFIRMED_SELECTION;
-                            currentCardIndex = selectedCard;
-                            displayCard();
-                        } else {
-                            message.what = MessageType.WRONG_SELECTION;
-                        }
-                        Handler writerHandler = writerHandlers.get(number).get();
-                        if(writerHandler != null) {
-                            writerHandler.sendMessage(message);
-
-                        }
-                    }
-                        break;
-                    case MessageType.HAND_CLEARED: {
-                        int winner = msg.getData().getInt("number");
-
-                        Message message = new Message();
-                        message.what = MessageType.END_GAME;
-
-                        Bundle b = new Bundle();
-                        b.putInt("winner", winner);
-
-                        message.setData(b);
-
-                        for (WeakReference<Handler> handler: writerHandlers) {
-                            Handler wHandler = handler.get();
-                            if(wHandler != null) {
-                                wHandler.sendMessage(message);
-                            }
-                        }
-
-                        String winnerName = playersNames.get(winner);
-                        promptEndGame(winnerName);
-                    }
-                        break;
-                    case MessageType.PLAYER_READY:
-                        int num = msg.getData().getInt("number");
-                        Log.d("server", "player ready index: " + Integer.toString(num));
-                        Log.d("server", "players ready array len: " + Integer.toString(playersReady.size()));
-                        playersReady.set(num, true);
-
-                        boolean allReady = true;
-                        for (Boolean b : playersReady){
-                            if(!b) allReady = false;
-                        }
-
-                        if(allReady) {
-                            // Start a new game
-                            for(int i = 0; i < numberOfPlayers; i++) {
-                                Message message = new Message();
-                                message.what = MessageType.NEW_GAME;
-
-                                Handler wHandler = writerHandlers.get(i).get();
-                                if(wHandler != null) {
-                                    wHandler.sendMessage(message);
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-        };
+        mHandler = new Handler(callback);
 
         // Socket threads setup
         for(int i=0; i < numberOfPlayers; i++) {
@@ -219,7 +244,8 @@ public class ServerGameActivity extends AppCompatActivity {
             Handler wHandler = writerHandlers.get(i).get();
             if(wHandler != null) {
                 wHandler.sendMessage(message);
-            }        }
+            }
+        }
     }
 
     @Override
@@ -292,9 +318,7 @@ public class ServerGameActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
-                        finish();
-                        Intent intent = new Intent(ServerGameActivity.this, ServerSetupActivity.class);
-                        startActivity(intent);
+                        playAgain.setFlag(true);
                     }
                 })
                 .setNegativeButton("No", null)
@@ -308,6 +332,8 @@ public class ServerGameActivity extends AppCompatActivity {
         }
 
         ServerPlayersList.clearPlayers();
+
+//        mHandler.removeCallbacksAndMessages(null);
 
     }
 }
