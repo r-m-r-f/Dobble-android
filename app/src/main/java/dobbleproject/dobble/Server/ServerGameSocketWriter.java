@@ -67,12 +67,9 @@ public class ServerGameSocketWriter {
                     out.write(packet.toString());
                     out.flush();
                     return true;
-                } else {
-//                    return false;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-//                return false;
             }
 
             return false;
@@ -99,10 +96,10 @@ public class ServerGameSocketWriter {
     public void quit() throws IOException {
         Boolean result = null;
         if (out != null) {
-            out.flush();
+            out.close();
         }
         thread.interrupt();
-//        mHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacksAndMessages(null);
         if (thread.isAlive())
             result = thread.quit();
 

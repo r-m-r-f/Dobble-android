@@ -27,7 +27,7 @@ public class PlayerActivity extends AppCompatActivity {
                 String playerName = playerNameBox.getText().toString();
 
                 if(!playerName.isEmpty()) {
-//                    finish();
+                    finish();
                     Intent intent = new Intent(PlayerActivity.this, ServerSelectionActivity.class);
                     intent.putExtra("playerName", playerName);
                     startActivity(intent);

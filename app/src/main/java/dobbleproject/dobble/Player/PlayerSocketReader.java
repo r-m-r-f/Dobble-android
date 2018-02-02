@@ -47,7 +47,11 @@ public class PlayerSocketReader extends Thread {
             in = playerSocket.getReader();
 
             Message msg = null;
+            Handler handler;
             while (isRunning && !interrupted()) {
+                msg = null;
+                packet = null;
+
                 String response = in.readLine();
                 if (response != null) {
                     Log.d("player reader", "response: " + response);
@@ -57,77 +61,79 @@ public class PlayerSocketReader extends Thread {
                 Class packetClass = null;
                 if (packet != null) {
                     packetClass = packet.getClass();
-                }
-                // TODO: Refactor
-                if(packetClass == GameSetupPacket.class) {
-                    ArrayList<String> playersNames = ((GameSetupPacket) packet).getPlayerNames();
-                    int playerNumber = ((GameSetupPacket) packet).getPlayerNumber();
+                    // TODO: Refactor
+                    if(packetClass == GameSetupPacket.class) {
+                        ArrayList<String> playersNames = ((GameSetupPacket) packet).getPlayerNames();
+                        int playerNumber = ((GameSetupPacket) packet).getPlayerNumber();
 
-                    Bundle bundle = new Bundle();
-                    bundle.putStringArrayList("names", playersNames);
-                    bundle.putInt("playerNumber", playerNumber);
+                        Bundle bundle = new Bundle();
+                        bundle.putStringArrayList("names", playersNames);
+                        bundle.putInt("playerNumber", playerNumber);
 
-                    msg = new Message();
-                    msg.what = MessageType.GAME_SETUP;
-                    msg.setData(bundle);
+                        msg = new Message();
+                        msg.what = MessageType.GAME_SETUP;
+                        msg.setData(bundle);
 //                    uiHandler.sendMessage(msg);
-                }
-                else if (packetClass == StartGamePacket.class){
-                    msg = new Message();
-                    msg.what = MessageType.NEW_GAME;
+                    }
+                    else if (packetClass == StartGamePacket.class){
+                        msg = new Message();
+                        msg.what = MessageType.NEW_GAME;
 //                    uiHandler.sendMessage(msg);
 
-                }
-                else if(packetClass == NewHandPacket.class) {
-                    ArrayList<Integer> handCardsIndexes = ((NewHandPacket) packet).getCardsIndexes();
+                    }
+                    else if(packetClass == NewHandPacket.class) {
+                        ArrayList<Integer> handCardsIndexes = ((NewHandPacket) packet).getCardsIndexes();
 
-                    Bundle bundle = new Bundle();
-                    bundle.putIntegerArrayList("hand", handCardsIndexes);
+                        Bundle bundle = new Bundle();
+                        bundle.putIntegerArrayList("hand", handCardsIndexes);
 
-                    msg = new Message();
-                    msg.what = MessageType.HAND_DELIVERED;
-                    msg.setData(bundle);
+                        msg = new Message();
+                        msg.what = MessageType.HAND_DELIVERED;
+                        msg.setData(bundle);
 //                    uiHandler.sendMessage(msg);
-                }
-                else if(packetClass == NewTurnPacket.class) {
-                    Card card = ((NewTurnPacket) packet).getCard();
+                    }
+                    else if(packetClass == NewTurnPacket.class) {
+                        Card card = ((NewTurnPacket) packet).getCard();
 
-                    Bundle bundle = new Bundle();
-                    bundle.putParcelable("card", card);
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable("card", card);
 
-                    msg = new Message();
-                    msg.what = MessageType.NEW_TURN;
-                    msg.setData(bundle);
+                        msg = new Message();
+                        msg.what = MessageType.NEW_TURN;
+                        msg.setData(bundle);
 //                    uiHandler.sendMessage(msg);
-                }
-                else if (packetClass == ConfirmSelectionPacket.class) {
-                    msg = new Message();
-                    msg.what = MessageType.CONFIRMED_SELECTION;
+                    }
+                    else if (packetClass == ConfirmSelectionPacket.class) {
+                        msg = new Message();
+                        msg.what = MessageType.CONFIRMED_SELECTION;
 //                    uiHandler.sendMessage(msg);
-                }
-                else if(packetClass == WrongSelectionPacket.class) {
-                    msg = new Message();
-                    msg.what = MessageType.WRONG_SELECTION;
+                    }
+                    else if(packetClass == WrongSelectionPacket.class) {
+                        msg = new Message();
+                        msg.what = MessageType.WRONG_SELECTION;
 //                    uiHandler.sendMessage(msg);
-                }
-                else if (packetClass == EndGamePacket.class) {
-                    msg = new Message();
-                    msg.what = MessageType.END_GAME;
+                    }
+                    else if (packetClass == EndGamePacket.class) {
+                        // close connection
+//                        in.close();
 
-                    Bundle b = new Bundle();
-                    b.putInt("winner", ((EndGamePacket) packet).getWinner());
+                        msg = new Message();
+                        msg.what = MessageType.END_GAME;
 
-                    msg.setData(b);
+                        Bundle b = new Bundle();
+                        b.putInt("winner", ((EndGamePacket) packet).getWinner());
+
+                        msg.setData(b);
 //                    uiHandler.sendMessage(msg);
-                }
+                    }
 
-                if(msg != null && uiHandler.get() !=null) {
-                    uiHandler.get().sendMessage(msg);
-                    msg = null;
+                    handler = uiHandler.get();
+                    if(msg != null && handler !=null) {
+                        uiHandler.get().sendMessage(msg);
+                        handler = null;
+                    }
                 }
-
                 // TODO: Handle game logic
-
             }
         } catch (SocketException e) {
             isRunning = false;

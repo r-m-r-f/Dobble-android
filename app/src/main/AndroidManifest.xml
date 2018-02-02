@@ -7,9 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-    <uses-permission
-        android:name="android.permission.ACCESS_COARSE_LOCATION"
-        android:required="true" />
+
 
     <application
         android:allowBackup="true"
@@ -40,7 +38,7 @@
             android:name=".PlayerActivity"
             android:screenOrientation="portrait">
             <intent-filter>
-                <action android:name="dobble-project.dobble.ClientActivity" />
+                <action android:name="dobble-project.dobble.PlayerActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -49,18 +47,40 @@
             android:name=".PlayerGameActivity"
             android:screenOrientation="portrait">
             <intent-filter>
-                <action android:name="dobble-project.dobble.GameActivity" />
+                <action android:name="dobble-project.dobble.PlayerGameActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
             android:name=".ServerSelectionActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="dobble-project.dobble.ServerSelectionActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ServerSetupActivity"
-            android:screenOrientation="portrait" />
-        <activity android:name=".ServerGameActivity"></activity>
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="dobble-project.dobble.ServerSetupActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ServerGameActivity"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="dobble-project.dobble.ServerGameActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

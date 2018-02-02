@@ -7,6 +7,12 @@ android {
 //            keyPassword '123'
 //            storePassword '123'
 //        }
+        config {
+            storeFile file('C:/Users/abcd/Desktop/keyapk.jks')
+            keyPassword 'dupa123'
+            storePassword 'dupa123'
+            keyAlias 'keydobble'
+        }
     }
     compileSdkVersion 26
     defaultConfig {
@@ -22,6 +28,10 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 //            signingConfig signingConfigs.release
+            signingConfig signingConfigs.config
+        }
+        debug {
+            signingConfig signingConfigs.config
         }
     }
 }

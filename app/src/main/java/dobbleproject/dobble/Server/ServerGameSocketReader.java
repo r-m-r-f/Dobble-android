@@ -100,6 +100,9 @@ public class ServerGameSocketReader extends Thread {
                     }
                 }
 
+                message = null;
+                packet = null;
+
             } catch (SocketException e) {
                 isRunning = false;
                 Log.d("server socket reader", "exception, thread hard quits");

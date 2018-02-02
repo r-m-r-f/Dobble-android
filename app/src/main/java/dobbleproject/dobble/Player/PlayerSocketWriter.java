@@ -92,10 +92,10 @@ public class PlayerSocketWriter {
                 e.printStackTrace();
             }
         }
-        thread.interrupt();
+//        thread.interrupt();
         if (thread.isAlive()) {
-//            mHandler.removeCallbacksAndMessages(null);
-            result = thread.quitSafely();
+            mHandler.removeCallbacksAndMessages(null);
+            result = thread.quit();
         }
         Log.d("player socket writer", "thread quit: " + Boolean.toString(result));
     }

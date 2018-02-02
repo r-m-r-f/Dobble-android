@@ -156,10 +156,7 @@ public class ServerGameActivity extends AppCompatActivity {
             @Override
             public void onChange() {
                 Log.d("server game activity","in play again");
-
-                Intent intent = new Intent(ServerGameActivity.this, ServerSetupActivity.class);
-                startActivity(intent);
-                finish();
+                finishAndRemoveTask();
             }
         });
 
@@ -333,7 +330,7 @@ public class ServerGameActivity extends AppCompatActivity {
 
         ServerPlayersList.clearPlayers();
 
-//        mHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacksAndMessages(null);
 
     }
 }

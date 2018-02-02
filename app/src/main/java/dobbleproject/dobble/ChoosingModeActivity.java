@@ -24,6 +24,7 @@ public class ChoosingModeActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(ChoosingModeActivity.this, ServerSetupActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -32,6 +33,7 @@ public class ChoosingModeActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(ChoosingModeActivity.this, PlayerActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
     }

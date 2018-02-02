@@ -88,96 +88,11 @@ public class PlayerGameActivity extends AppCompatActivity {
             @Override
             public void onChange() {
                 Log.d("player game activity","in play again");
-                Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
-                startActivity(intent);
-                finish();
+                finishAndRemoveTask();
             }
         });
 
         mHandler = new Handler(callback);
-
-//        mHandler = new Handler() {
-//            @Override
-//            public void handleMessage(Message msg) {
-//                Message message;
-//                Bundle b;
-//                switch (msg.what){
-//                    case MessageType.GAME_SETUP:
-//                        playerNames = msg.getData().getStringArrayList("names");
-//                        playerNumber = msg.getData().getInt("playerNumber");
-//
-//                        StringBuilder sb = new StringBuilder();
-//                        for(int i = 0; i < playerNames.size(); i++) {
-//                            sb.append(playerNames.get(i));
-//                            sb.append(" ");
-//                        }
-//
-//                        playersNamesTextView.setText(sb.toString());
-//                        break;
-//                    case MessageType.HAND_DELIVERED:
-//                        handCardsIndexes = msg.getData().getIntegerArrayList("hand");
-//                        Toast.makeText(mContext, "got hand: size " + handCardsIndexes.size(), Toast.LENGTH_LONG).show();
-//                        currentHandIndex = 0;
-//
-//                        message = new Message();
-//                        message.what = MessageType.PLAYER_READY;
-//
-//                        b = new Bundle();
-//                        b.putInt("number", playerNumber);
-//
-//                        Log.d("client player ready", Integer.toString(playerNumber));
-//                        message.setData(b);
-//                        if(writerHandler.get() != null) {
-//                            writerHandler.get().sendMessage(message);
-//                        }
-//                        break;
-//                    case MessageType.NEW_GAME:
-//                        updateCardsLeft();
-//                        displayCard();
-//                        isClickable = true;
-//                        Toast.makeText(mContext, "New game!", Toast.LENGTH_SHORT).show();
-//                        break;
-//                    case MessageType.CONFIRMED_SELECTION:
-//                        currentHandIndex++;
-//                        cardBackground.setBackgroundColor(Color.LTGRAY);
-//
-//                        // Check if any cards left
-//                        if(currentHandIndex < handCardsIndexes.size()) {
-//                            displayCard();
-//                            updateCardsLeft();
-//                            isClickable = true;
-//                        } else {
-//                            message = new Message();
-//                            message.what = MessageType.HAND_CLEARED;
-//                            if(writerHandler.get() != null) {
-//                                writerHandler.get().sendMessage(message);
-//                            }                        }
-//                        break;
-//                    case MessageType.WRONG_SELECTION:
-//                        Toast.makeText(mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
-//
-//                        // Block ui
-//                        isClickable = false;
-//                        cardBackground.setBackgroundColor(Color.RED);
-//                        new CountDownTimer(1000, 500){
-//                            @Override
-//                            public void onTick(long l) {}
-//
-//                            @Override
-//                            public void onFinish() {
-//                                isClickable = true;
-//                                cardBackground.setBackgroundColor(Color.LTGRAY);
-//                            }
-//                        }.start();
-//                        break;
-//                    case MessageType.END_GAME: {
-//                        int winner = msg.getData().getInt("winner");
-//                        String winnerName = winner == playerNumber ? "You": playerNames.get(winner);
-//                        promptEndGame(winnerName);
-//                    }
-//                }
-//            }
-//        };
     }
 
     @Override
@@ -315,105 +230,9 @@ public class PlayerGameActivity extends AppCompatActivity {
         PlayerWriterSocketHandler.close();
         Log.d("player cleanup", "writer socket closed");
 
-//        mHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacksAndMessages(null);
 
     }
-
-//    static class PlayerGameHandler extends Handler {
-//        private WeakReference<PlayerGameActivity> ref;
-//
-//        public PlayerGameHandler(PlayerGameActivity ref) {
-//            this.ref = new WeakReference<>(ref);
-//        }
-//        @Override
-//        public void handleMessage(Message msg) {
-//            super.handleMessage(msg);
-//
-//            final PlayerGameActivity a = ref.get();
-//            if (ref == null) {
-//                return;
-//            }
-//            Message message;
-//                Bundle b;
-//                switch (msg.what){
-//                    case MessageType.GAME_SETUP:
-//                        a.playerNames = msg.getData().getStringArrayList("names");
-//                        a.playerNumber = msg.getData().getInt("playerNumber");
-//
-//                        StringBuilder sb = new StringBuilder();
-//                        for(int i = 0; i < a.playerNames.size(); i++) {
-//                            sb.append(a.playerNames.get(i));
-//                            sb.append(" ");
-//                        }
-//
-//                        a.playersNamesTextView.setText(sb.toString());
-//                        break;
-//                    case MessageType.HAND_DELIVERED:
-//                        a.handCardsIndexes = msg.getData().getIntegerArrayList("hand");
-//                        Toast.makeText(a.mContext, "got hand: size " + a.handCardsIndexes.size(), Toast.LENGTH_LONG).show();
-//                        a.currentHandIndex = 0;
-//
-//                        message = new Message();
-//                        message.what = MessageType.PLAYER_READY;
-//
-//                        b = new Bundle();
-//                        b.putInt("number", a.playerNumber);
-//
-//                        Log.d("client player ready", Integer.toString(a.playerNumber));
-//                        message.setData(b);
-//                        if(a.writerHandler.get() != null) {
-//                            a.writerHandler.get().sendMessage(message);
-//                        }
-//                        break;
-//                    case MessageType.NEW_GAME:
-//                        a.updateCardsLeft();
-//                        a.displayCard();
-//                        a.isClickable = true;
-//                        Toast.makeText(a.mContext, "New game!", Toast.LENGTH_SHORT).show();
-//                        break;
-//                    case MessageType.CONFIRMED_SELECTION:
-//                        a.currentHandIndex++;
-//                        a.cardBackground.setBackgroundColor(Color.LTGRAY);
-//
-//                        // Check if any cards left
-//                        if(a.currentHandIndex < a.handCardsIndexes.size()) {
-//                            a.displayCard();
-//                            a.updateCardsLeft();
-//                            a.isClickable = true;
-//                        } else {
-//                            message = new Message();
-//                            message.what = MessageType.HAND_CLEARED;
-//                            if(a.writerHandler.get() != null) {
-//                                a.writerHandler.get().sendMessage(message);
-//                            }                        }
-//                        break;
-//                    case MessageType.WRONG_SELECTION:
-//                        Toast.makeText(a.mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
-//
-//                        // Block ui
-//                        a.isClickable = false;
-//                        a.cardBackground.setBackgroundColor(Color.RED);
-//                        new CountDownTimer(1000, 500){
-//                            @Override
-//                            public void onTick(long l) {}
-//
-//                            @Override
-//                            public void onFinish() {
-//                                a.isClickable = true;
-//                                a.cardBackground.setBackgroundColor(Color.LTGRAY);
-//                            }
-//                        }.start();
-//                        break;
-//                    case MessageType.END_GAME: {
-//                        int winner = msg.getData().getInt("winner");
-//                        String winnerName = winner == a.playerNumber ? "You": a.playerNames.get(winner);
-//                        a.promptEndGame(winnerName);
-//                        return;
-//                    }
-//            }
-//
-//        }
-//    }
 
     Handler.Callback callback = new Handler.Callback() {
         @Override
@@ -476,7 +295,8 @@ public class PlayerGameActivity extends AppCompatActivity {
                             if(writerHandler.get() != null) {
                                 writerHandler.get().sendMessage(message);
                                 return true;
-                            }                        }
+                            }
+                        }
                         break;
                     case MessageType.WRONG_SELECTION:
                         Toast.makeText(mContext, "wrong picture selected!", Toast.LENGTH_LONG).show();
@@ -501,10 +321,6 @@ public class PlayerGameActivity extends AppCompatActivity {
                         String winnerName = winner == playerNumber ? "You": playerNames.get(winner);
                         promptEndGame(winnerName);
                         Log.d("player game activity","after dialog");
-
-//                        if (playAgain) {
-//
-//                        }
                         return true;
                     }
                 }
