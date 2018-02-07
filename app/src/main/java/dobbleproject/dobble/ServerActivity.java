@@ -59,12 +59,10 @@ public class ServerActivity extends AppCompatActivity {
         numberOfPlayers = b.getInt("numberOfPlayers");
 
         startButton = findViewById(R.id.startButton);
-        textView = findViewById(R.id.textView4);
 
+        textView = findViewById(R.id.textView4);
         textView.setMovementMethod(new ScrollingMovementMethod());
 
-        // Set context
-//        mContext = this.getApplicationContext();
 
         try {
             wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -132,6 +130,7 @@ public class ServerActivity extends AppCompatActivity {
 
                     serverAnnouncement.start();
                     serverPlayerRegistration.start();
+                    startButton.setEnabled(false);
                 } else {
                     stopThreads();
                     isJobRunning = false;
