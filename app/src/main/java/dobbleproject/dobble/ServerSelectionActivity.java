@@ -37,6 +37,7 @@ public class ServerSelectionActivity extends AppCompatActivity {
     private Handler mHandler;
 
     private WifiManager wifiManager;
+    private WifiManager.MulticastLock mLock;
 
     private String playerIp;
     private String playerName;
@@ -84,6 +85,11 @@ public class ServerSelectionActivity extends AppCompatActivity {
 
         try {
             wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+            // Fix server discovery
+            mLock = wifiManager.createMulticastLock("lock");
+            mLock.acquire();
+
             playerIp = WifiHelper.getIpAddress(wifiManager);
 
             // Set player tcp socket
@@ -100,48 +106,6 @@ public class ServerSelectionActivity extends AppCompatActivity {
         }
 
         mHandler = new Handler(callback);
-
-//        mHandler = new Handler() {
-//            @Override
-//            public void handleMessage(Message msg) {
-//                switch (msg.what) {
-//                    case MessageType.SERVER_DISCOVERED:
-//                        ServerInfo serverInfo = (ServerInfo) msg.getData().getParcelable("info");
-//                        Log.d("selection", "got announcement from " + serverInfo.getName() + " " + serverInfo.getIp());
-//                        if(knownServers.get(serverInfo.getIp()) == null) {
-//                            knownServers.put(serverInfo.getIp(), serverInfo.getName());
-//                            serversList.add(serverInfo);
-//                        }
-//                        adapter.notifyDataSetChanged();
-//                        break;
-//                    case MessageType.REGISTER_REQUEST_EXPIRED:
-//                        Toast.makeText(getApplicationContext(), "Server not responding!", Toast.LENGTH_LONG);
-//
-//                        // Restart server discovery, probably unsafe
-//                        if(playerServerDiscovery != null) {
-//                            playerServerDiscovery.quit();
-//                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
-//                        }
-//                        break;
-//                    case MessageType.REGISTER_REQUEST_ERROR:
-//                        Toast.makeText(getApplicationContext(), "Unknown error", Toast.LENGTH_LONG);
-//
-//                        // Restart server discovery, probably unsafe
-//                        if(playerServerDiscovery != null) {
-//                            playerServerDiscovery.quit();
-//                            playerServerDiscovery = new PlayerServerDiscovery(mHandler);
-//                        }
-//                        break;
-//                    case MessageType.PLAYER_REGISTERED:
-//                        Log.d("player registered", ServerSelectionActivity.this.toString());
-//                        finish();
-//                        //Start a new activity
-//                        Intent intent = new Intent(ServerSelectionActivity.this, PlayerGameActivity.class);
-//                        startActivity(intent);
-//                        break;
-//                }
-//            }
-//        };
     }
 
     @Override
@@ -164,6 +128,9 @@ public class ServerSelectionActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopThreads();
+        if (mLock != null) {
+            mLock.release();
+        }
         mHandler.removeCallbacksAndMessages(null);
     }
 

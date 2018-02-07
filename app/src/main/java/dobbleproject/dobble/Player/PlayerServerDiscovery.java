@@ -5,11 +5,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageType;
@@ -36,16 +39,24 @@ public class PlayerServerDiscovery extends Thread {
         Packet response;
 
         try {
-            listenerSocket = new DatagramSocket(AppConfiguration.ANNOUNCEMENT_LISTENER_PORT);
+            listenerSocket = new DatagramSocket(AppConfiguration.ANNOUNCEMENT_LISTENER_PORT, InetAddress.getByName("0.0.0.0"));
+            listenerSocket.setBroadcast(true);
+            Log.d("PlayerServerDiscovery", "created a socket");
         } catch (SocketException e) {
-            Log.e("PlayerServerDiscovery", "can't create a socket");
+            Log.d("PlayerServerDiscovery", "can't create a socket");
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
         while(!isInterrupted() && isRunning) {
             try {
                 listenerSocket.receive(datagram);
+
+                Log.d("PlayerServerDiscovery", new String(datagram.getData()));
+
                 response = PacketParser.getPacketFromDatagram(datagram);
+
 
                 if(response instanceof AnnouncementPacket) {
                     ServerInfo serverInfo = new ServerInfo(((AnnouncementPacket) response).getServerName(),

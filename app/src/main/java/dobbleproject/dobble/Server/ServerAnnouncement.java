@@ -36,6 +36,7 @@ public class ServerAnnouncement extends Thread {
 
         try {
             broadcastSocket = new DatagramSocket();
+            broadcastSocket.setBroadcast(true);
         } catch (SocketException e) {
             e.printStackTrace();
         }

@@ -28,7 +28,7 @@
         android:background="@drawable/round_shape"
         android:ems="1"
         android:layout_margin="10dp"
-        android:text="13"
+        android:hint="0"
         android:textSize="30sp"
         android:gravity="center"
 
