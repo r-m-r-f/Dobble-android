@@ -55,8 +55,8 @@ public class ServerGameSocketReader extends Thread {
                 Class packetClass = null;
                 if (packet != null) {
                     packetClass = packet.getClass();
+                    Log.d("server listener", "got class" + packetClass.getName());
                 }
-                Log.d("server listener", "got class" + packetClass.getName());
 
                 if(packetClass == SelectedPicturePacket.class) {
                     int cardIndex = ((SelectedPicturePacket)packet).getCardIndex();
@@ -117,9 +117,9 @@ public class ServerGameSocketReader extends Thread {
     }
 
     public void quit() throws IOException {
-        if (in != null) {
-            in.close();
-        }
+//        if (in != null) {
+//            in.close();
+//        }
         if (isAlive())
             interrupt();
         isRunning = false;

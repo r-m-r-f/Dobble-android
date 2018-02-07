@@ -85,14 +85,14 @@ public class PlayerSocketWriter {
 
     public void quit() {
         Boolean result = null;
-        if (out != null) {
-            try {
-                out.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-//        thread.interrupt();
+//        if (out != null) {
+//            try {
+//                out.flush();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+        thread.interrupt();
         if (thread.isAlive()) {
             mHandler.removeCallbacksAndMessages(null);
             result = thread.quit();

@@ -46,6 +46,7 @@ public class ServerAnnouncement extends Thread {
             if (handler != null) {
                 handler.sendMessage(MessageHelper.createDebugMessage("Broadcast"));
             }
+            handler = null;
         }
 
         while(!isInterrupted() && isRunning) {
@@ -59,10 +60,12 @@ public class ServerAnnouncement extends Thread {
                     if (handler != null) {
                         handler.sendMessage(MessageHelper.createDebugMessage("sent announcement"));
                     }
+                    handler = null;
                 }
 
 //                uiHandler.sendMessage(MessageHelper.createDebugMessage("sent announcement"));
-                sleep(2000);
+                Thread.currentThread().sleep(2000);
+
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -78,8 +81,6 @@ public class ServerAnnouncement extends Thread {
                 handler.sendMessage(MessageHelper.createDebugMessage("server announcement stopped"));
             }
         }
-
-//        uiHandler.sendMessage(MessageHelper.createDebugMessage("server announcement stopped"));
     }
 
 

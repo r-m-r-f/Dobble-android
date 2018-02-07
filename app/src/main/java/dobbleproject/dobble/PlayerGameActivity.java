@@ -88,7 +88,15 @@ public class PlayerGameActivity extends AppCompatActivity {
             @Override
             public void onChange() {
                 Log.d("player game activity","in play again");
-                finishAndRemoveTask();
+//                finishAndRemoveTask();
+//                try {
+//                    cleanup();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+                finish();
+                Intent intent = new Intent(PlayerGameActivity.this, PlayerActivity.class);
+                startActivity(intent);
             }
         });
 

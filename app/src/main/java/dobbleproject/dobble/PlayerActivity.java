@@ -7,11 +7,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class PlayerActivity extends AppCompatActivity {
 
     Button joinGame;
     EditText playerNameBox;
+    Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +22,8 @@ public class PlayerActivity extends AppCompatActivity {
 
         joinGame = findViewById(R.id.joinButton);
         playerNameBox = findViewById(R.id.playerNameBox);
+
+        mContext = this;
 
         joinGame.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -31,6 +35,8 @@ public class PlayerActivity extends AppCompatActivity {
                     Intent intent = new Intent(PlayerActivity.this, ServerSelectionActivity.class);
                     intent.putExtra("playerName", playerName);
                     startActivity(intent);
+                } else {
+                    Toast.makeText(mContext, "Name can't be empty!", Toast.LENGTH_SHORT).show();
                 }
             }
         });

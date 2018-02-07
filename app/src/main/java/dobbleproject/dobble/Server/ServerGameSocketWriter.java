@@ -95,15 +95,15 @@ public class ServerGameSocketWriter {
 
     public void quit() throws IOException {
         Boolean result = null;
-        if (out != null) {
-            out.close();
-        }
+//        if (out != null) {
+//            out.close();
+//        }
         thread.interrupt();
         mHandler.removeCallbacksAndMessages(null);
         if (thread.isAlive())
             result = thread.quit();
 
-        Log.d("server socket writer", "thread quit: " + Boolean.toString(result));
+        Log.d("server socket writer", "thread quit: " + (result!=null?Boolean.toString(result): "null"));
     }
 
 }

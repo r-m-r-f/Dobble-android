@@ -36,7 +36,7 @@ public class ServerGameActivity extends AppCompatActivity {
     List<ImageView> cardImageView = new ArrayList<>();
 
     Deck deck;
-    int currentCardIndex;
+    Integer currentCardIndex;
 
     int numberOfPlayers;
     Handler mHandler;
@@ -72,12 +72,14 @@ public class ServerGameActivity extends AppCompatActivity {
 
                     Message message = new Message();
 
-                    if (checkMatching(selectedPicture)) {
-                        message.what = MessageType.CONFIRMED_SELECTION;
-                        currentCardIndex = selectedCard;
-                        displayCard();
-                    } else {
-                        message.what = MessageType.WRONG_SELECTION;
+                    synchronized (currentCardIndex) {
+                        if (checkMatching(selectedPicture)) {
+                            message.what = MessageType.CONFIRMED_SELECTION;
+                            currentCardIndex = selectedCard;
+                            displayCard();
+                        } else {
+                            message.what = MessageType.WRONG_SELECTION;
+                        }
                     }
                     Handler writerHandler = writerHandlers.get(number).get();
                     if(writerHandler != null) {
@@ -89,22 +91,18 @@ public class ServerGameActivity extends AppCompatActivity {
                 case MessageType.HAND_CLEARED: {
                     int winner = msg.getData().getInt("number");
 
-                    Message message = new Message();
-                    message.what = MessageType.END_GAME;
-
-                    Bundle b = new Bundle();
-                    b.putInt("winner", winner);
-
-                    message.setData(b);
-
                     for (WeakReference<Handler> handler: writerHandlers) {
-                        try {
-                            Handler wHandler = handler.get();
-                            if(wHandler != null) {
-                                wHandler.sendMessage(message);
-                            }
-                        } catch (IllegalStateException e) {
+                        Message message = new Message();
+                        message.what = MessageType.END_GAME;
 
+                        Bundle b = new Bundle();
+                        b.putInt("winner", winner);
+
+                        message.setData(b);
+
+                        Handler wHandler = handler.get();
+                        if(wHandler != null) {
+                            wHandler.sendMessage(message);
                         }
                     }
 
@@ -134,9 +132,10 @@ public class ServerGameActivity extends AppCompatActivity {
                             Handler wHandler = writerHandlers.get(i).get();
                             if(wHandler != null) {
                                 wHandler.sendMessage(message);
-                                return true;
+
                             }
                         }
+                        return true;
                     }
                     break;
             }
@@ -156,7 +155,15 @@ public class ServerGameActivity extends AppCompatActivity {
             @Override
             public void onChange() {
                 Log.d("server game activity","in play again");
-                finishAndRemoveTask();
+//                finishAndRemoveTask();
+//                try {
+//                    cleanup();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+                finish();
+                Intent intent = new Intent(ServerGameActivity.this, ServerSetupActivity.class);
+                startActivity(intent);
             }
         });
 

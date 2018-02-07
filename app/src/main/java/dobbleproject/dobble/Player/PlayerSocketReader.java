@@ -137,6 +137,7 @@ public class PlayerSocketReader extends Thread {
             }
         } catch (SocketException e) {
             isRunning = false;
+            e.printStackTrace();
             Log.d("player socket reader", "socket exception");
         } catch (IOException e) {
             isRunning = false;
@@ -147,13 +148,13 @@ public class PlayerSocketReader extends Thread {
     }
 
     public void quit() {
-        if(in != null) {
-            try {
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if(in != null) {
+//            try {
+//                in.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
         if (isAlive())
             interrupt();
         isRunning = false;

@@ -30,8 +30,8 @@ public class ServerPlayerRegistration extends Thread {
     String serverName;
     String serverIp;
 
-    private static int numberOfPlayers;
-    private static int registered;
+    private int numberOfPlayers;
+    private int registered;
 
     boolean isRunning = true;
 
@@ -76,7 +76,7 @@ public class ServerPlayerRegistration extends Thread {
                     Socket writerSocket = new Socket(playerIp, playerPort);
 
                     ServerPlayersList.addPlayer(new Player(new PlayerInfo(((RegisterRequestPacket) packet).getPlayerName(),
-                            ((RegisterRequestPacket) packet).getPlayerIp(), -1), readerSocket, new SocketWrapper(writerSocket)));
+                            ((RegisterRequestPacket) packet).getPlayerIp(), ((RegisterRequestPacket) packet).getPort()), readerSocket, new SocketWrapper(writerSocket)));
                     registered++;
                 }
 
@@ -85,6 +85,7 @@ public class ServerPlayerRegistration extends Thread {
                     if (handler != null) {
                         handler.sendMessage(MessageHelper.createDebugMessage("registered " + readerSocket.getInetAddress()));
                     }
+                    handler = null;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -100,7 +101,6 @@ public class ServerPlayerRegistration extends Thread {
                 handler.sendMessage(message);
             }
         }
-//        uiHandler.sendMessage(message);
     }
 
     public void quit() {
@@ -116,7 +116,6 @@ public class ServerPlayerRegistration extends Thread {
                 handler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
             }
         }
-//        uiHandler.sendMessage(MessageHelper.createDebugMessage("registration stopped"));
     }
 
 }
