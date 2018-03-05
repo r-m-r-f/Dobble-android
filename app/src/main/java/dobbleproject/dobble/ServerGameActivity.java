@@ -325,7 +325,12 @@ public class ServerGameActivity extends AppCompatActivity {
                         playAgain.setFlag(true);
                     }
                 })
-                .setNegativeButton("No", null)
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finishAndRemoveTask();
+                    }
+                })
                 .show();
     }
 
