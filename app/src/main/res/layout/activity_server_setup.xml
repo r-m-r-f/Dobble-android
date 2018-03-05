@@ -5,6 +5,8 @@
     android:id="@+id/serverSetupLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    android:screenOrientation="portrait"
     tools:context="dobbleproject.dobble.ServerSetupActivity">
 
     <TextView
@@ -39,7 +41,8 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
         android:inputType="textNoSuggestions"
-        android:text="server"
+        android:hint="server"
+        android:maxLines="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
@@ -52,7 +55,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:inputType="number"
-        android:text="1"
+        android:hint="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView9" />

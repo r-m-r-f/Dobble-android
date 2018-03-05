@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    android:screenOrientation="portrait"
+    tools:context="dobbleproject.dobble.ServerGameActivity">
+
+    <RelativeLayout
+        android:layout_width="300dp"
+        android:layout_height="500dp"
+        android:layout_margin="30dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/round_shape"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.355"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.673">
+
+        <ImageView
+            android:id="@+id/image_server"
+            android:layout_width="65dp"
+            android:layout_height="92dp"
+            android:layout_alignBottom="@+id/image2_server"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="63dp"
+            android:src="@drawable/banana" />
+
+        <ImageView
+            android:id="@+id/image1_server"
+            android:layout_width="118dp"
+            android:layout_height="75dp"
+            android:layout_below="@+id/image_server"
+            android:layout_marginTop="19dp"
+            android:layout_toEndOf="@+id/image_server"
+            android:src="@drawable/budzik" />
+
+        <ImageView
+            android:id="@+id/image2_server"
+            android:layout_width="57dp"
+            android:layout_height="84dp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/image1_server"
+            android:src="@drawable/dom" />
+
+        <ImageView
+            android:id="@+id/image3_server"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_above="@+id/image_server"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="12dp"
+            android:src="@drawable/drzewo" />
+
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

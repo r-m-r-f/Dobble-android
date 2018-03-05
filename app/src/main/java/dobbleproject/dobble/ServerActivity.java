@@ -2,11 +2,13 @@ package dobbleproject.dobble;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,7 +26,7 @@ import dobbleproject.dobble.Server.ServerSocketSingleton;
 public class ServerActivity extends AppCompatActivity {
     Button startButton;
     TextView textView;
-    Handler mHandler = new Handler();
+    Handler mHandler;
 
     boolean isJobRunning = false;
 
@@ -36,7 +38,7 @@ public class ServerActivity extends AppCompatActivity {
     // Number of players
     int numberOfPlayers;
 
-    Context mContext;
+    private final Context mContext = this;
 
     String broadcastAddress;
     String serverIp;
@@ -57,10 +59,22 @@ public class ServerActivity extends AppCompatActivity {
         numberOfPlayers = b.getInt("numberOfPlayers");
 
         startButton = findViewById(R.id.startButton);
-        textView = findViewById(R.id.textView4);
 
-        // Set context
-        mContext = this.getApplicationContext();
+        textView = findViewById(R.id.textView4);
+        textView.setMovementMethod(new ScrollingMovementMethod());
+
+
+        try {
+            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+            serverIp = WifiHelper.getIpAddress(wifiManager);
+            broadcastAddress = WifiHelper.getBroadcastAddress(wifiManager);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
 
         try {
             wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -90,7 +104,12 @@ public class ServerActivity extends AppCompatActivity {
                             textView.append("List: registred " + pf.getName() + " " + pf.getIp() + "\n");
                         }
                         isJobRunning = false;
-                        // TODO: Start a new activity
+
+                        finish();
+
+                        Intent i = new Intent(ServerActivity.this, ServerGameActivity.class);
+                        i.putExtra("numberOfPlayers", numberOfPlayers);
+                        startActivity(i);
                         break;
                     // TODO: Handle other message types
                 }
@@ -123,6 +142,7 @@ public class ServerActivity extends AppCompatActivity {
 
                     serverAnnouncement.start();
                     serverPlayerRegistration.start();
+                    startButton.setEnabled(false);
                 } else {
                     stopThreads();
                     isJobRunning = false;

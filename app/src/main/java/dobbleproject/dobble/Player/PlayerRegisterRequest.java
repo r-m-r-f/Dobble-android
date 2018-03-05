@@ -1,35 +1,27 @@
 package dobbleproject.dobble.Player;
 
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import org.json.JSONException;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 
 import dobbleproject.dobble.AppConfiguration;
 import dobbleproject.dobble.MessageType;
-import dobbleproject.dobble.Packet.AcknowledgementPacket;
-import dobbleproject.dobble.Packet.Packet;
-import dobbleproject.dobble.Packet.PacketParser;
-import dobbleproject.dobble.Packet.RegisterAcceptedPacket;
 import dobbleproject.dobble.Packet.RegisterRequestPacket;
+import dobbleproject.dobble.Server.Player;
+import dobbleproject.dobble.SocketWrapper;
 
 public class PlayerRegisterRequest extends Thread {
-    private Handler uiHandler;
+    //private Handler uiHandler;
+    private final WeakReference<Handler> uiHandler;
     private boolean isRunning = true;
 
 
@@ -39,28 +31,35 @@ public class PlayerRegisterRequest extends Thread {
     private String serverIp;
     private int serverPort;
 
-    private Socket playerSocket = null;
+    private SocketWrapper playerWriterSocket = null;
 
     public PlayerRegisterRequest(String playerName, String playerIp, String serverIp, int serverPort, Handler uiHandler) {
         this.playerName = playerName;
         this.playerIp = playerIp;
         this.serverIp = serverIp;
         this.serverPort = serverPort;
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<>(uiHandler);
     }
 
     @Override
     public void run() {
         Message message = new Message();
         try {
-            playerSocket = PlayerSocketHandler.getSocket();
-            InetAddress address = InetAddress.getByName(serverIp);
-            playerSocket.connect(new InetSocketAddress(address,serverPort), AppConfiguration.SOCKET_TIMEOUT);
+            // Create listener socket
+            ServerSocket ss = new ServerSocket(0, 1);
+            PlayerReaderSocketHandler.setServerSocket(ss);
 
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(playerSocket.getOutputStream()));
-            out.write(new RegisterRequestPacket(playerName, playerIp, -1).getPayload().toString());
+            playerWriterSocket = PlayerWriterSocketHandler.getSocket();
+            InetAddress address = InetAddress.getByName(serverIp);
+            playerWriterSocket.connect(new InetSocketAddress(address, serverPort));
+
+            BufferedWriter out = playerWriterSocket.getWriter();
+
+            out.write(new RegisterRequestPacket(playerName, playerIp, ss.getLocalPort()).toString());
             out.flush();
-            out.close();
+
+            Socket readerSocket = ss.accept();
+            PlayerReaderSocketHandler.setSocket(readerSocket);
 
             message = new Message();
             message.what = MessageType.PLAYER_REGISTERED;
@@ -69,8 +68,11 @@ public class PlayerRegisterRequest extends Thread {
         } catch (IOException e) {
             message.what = MessageType.REGISTER_REQUEST_ERROR;
             e.printStackTrace();
-        } finally {
-            uiHandler.sendMessage(message);
+        }
+        finally {
+            if(uiHandler.get() != null) {
+                uiHandler.get().sendMessage(message);
+            }
         }
     }
 

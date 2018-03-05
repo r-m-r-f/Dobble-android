@@ -2,19 +2,17 @@ package dobbleproject.dobble;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
-public class ClientActivity extends AppCompatActivity {
+public class PlayerActivity extends AppCompatActivity {
 
     Button joinGame;
     EditText playerNameBox;
-
     Context mContext;
 
     @Override
@@ -25,8 +23,7 @@ public class ClientActivity extends AppCompatActivity {
         joinGame = findViewById(R.id.joinButton);
         playerNameBox = findViewById(R.id.playerNameBox);
 
-        // Set context
-        mContext = this.getApplicationContext();
+        mContext = this;
 
         joinGame.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -34,12 +31,13 @@ public class ClientActivity extends AppCompatActivity {
                 String playerName = playerNameBox.getText().toString();
 
                 if(!playerName.isEmpty()) {
-                    Intent intent = new Intent(ClientActivity.this, ServerSelectionActivity.class);
+                    finish();
+                    Intent intent = new Intent(PlayerActivity.this, ServerSelectionActivity.class);
                     intent.putExtra("playerName", playerName);
                     startActivity(intent);
-                    finish();
+                } else {
+                    Toast.makeText(mContext, "Name can't be empty!", Toast.LENGTH_SHORT).show();
                 }
-
             }
         });
     }

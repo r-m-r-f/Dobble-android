@@ -31,7 +31,7 @@ public class ChoosingModeActivity extends AppCompatActivity {
         playerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ChoosingModeActivity.this, ClientActivity.class);
+                Intent intent = new Intent(ChoosingModeActivity.this, PlayerActivity.class);
                 startActivity(intent);
                 finish();
             }

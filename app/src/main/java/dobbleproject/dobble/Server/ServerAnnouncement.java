@@ -3,6 +3,7 @@ package dobbleproject.dobble.Server;
 import android.os.Handler;
 import org.json.JSONException;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -17,7 +18,7 @@ public class ServerAnnouncement extends Thread {
     String serverName;
     String serverIp;
 
-    Handler uiHandler;
+    private WeakReference<Handler> uiHandler;
 
     boolean isRunning = true;
 
@@ -25,7 +26,7 @@ public class ServerAnnouncement extends Thread {
         this.broadcastAddress = broadcastAddress;
         this.serverName = serverName;
         this.serverIp = serverIp;
-        this.uiHandler = uiHandler;
+        this.uiHandler = new WeakReference<>(uiHandler);
     }
 
 
@@ -35,27 +36,52 @@ public class ServerAnnouncement extends Thread {
 
         try {
             broadcastSocket = new DatagramSocket();
+            broadcastSocket.setBroadcast(true);
         } catch (SocketException e) {
             e.printStackTrace();
         }
 
-        uiHandler.sendMessage(MessageHelper.createDebugMessage("Broadcast"));
+        // TODO: Remove scoping if it doesn't help
+        {
+            Handler handler = uiHandler.get();
+            if (handler != null) {
+                handler.sendMessage(MessageHelper.createDebugMessage("Broadcast"));
+            }
+            handler = null;
+        }
 
         while(!isInterrupted() && isRunning) {
             try {
                 announcementPacket = new AnnouncementPacket(serverName, serverIp, ServerSocketSingleton.getPort()).getDatagram(broadcastAddress);
                 broadcastSocket.send(announcementPacket);
-                uiHandler.sendMessage(MessageHelper.createDebugMessage("sent announcement"));
-                sleep(2000);
+
+                // TODO: Remove scoping if it doesn't help
+                {
+                    Handler handler = uiHandler.get();
+                    if (handler != null) {
+                        handler.sendMessage(MessageHelper.createDebugMessage("sent announcement"));
+                    }
+                    handler = null;
+                }
+
+//                uiHandler.sendMessage(MessageHelper.createDebugMessage("sent announcement"));
+                Thread.currentThread().sleep(2000);
+
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 // TODO: Move isRunning to quit()
-                //Thread.currentThread().interrupt();
                 isRunning = false;
             }
         }
-        uiHandler.sendMessage(MessageHelper.createDebugMessage("server announcement stopped"));
+
+        // TODO: Remove scoping if it doesn't help
+        {
+            Handler handler = uiHandler.get();
+            if (handler != null) {
+                handler.sendMessage(MessageHelper.createDebugMessage("server announcement stopped"));
+            }
+        }
     }
 
 

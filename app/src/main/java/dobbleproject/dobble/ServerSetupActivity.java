@@ -1,17 +1,21 @@
 package dobbleproject.dobble;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class ServerSetupActivity extends AppCompatActivity {
     Button startButton;
 
     EditText serverNameBox;
     EditText numberOfPlayersBox;
+
+    Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +25,8 @@ public class ServerSetupActivity extends AppCompatActivity {
         startButton = findViewById(R.id.startServerButton);
         serverNameBox = findViewById(R.id.serverNameEditText);
         numberOfPlayersBox = findViewById(R.id.numberOfPlayersEditText);
+
+        mContext = this;
 
         startButton.setOnClickListener(new View.OnClickListener() {
             String serverName = null;
@@ -36,12 +42,15 @@ public class ServerSetupActivity extends AppCompatActivity {
                 }
 
                 if(serverName != null && !serverName.isEmpty() && numberOfPlayers != null && numberOfPlayers > 0) {
+                    finish();
+
                     Intent intent = new Intent(ServerSetupActivity.this, ServerActivity.class);
                     intent.putExtra("serverName", serverName);
                     intent.putExtra("numberOfPlayers", numberOfPlayers);
 
                     startActivity(intent);
-                    finish();
+                } else {
+                    Toast.makeText(mContext, "Set parameters!", Toast.LENGTH_SHORT).show();
                 }
 
 
